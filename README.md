@@ -28,6 +28,24 @@ MLBValueBets/
 
 No Xcode project is checked in yet — it's created on the Mac side on first open.
 
+## Windows pre-flight check (optional)
+
+Syntax-only parse of all Swift files against the Swift 6.3 Windows toolchain —
+catches typos and malformed declarations before you open Xcode on the Mac.
+
+```powershell
+# Install once:
+winget install --id Swift.Toolchain --skip-dependencies
+
+# Then run from the repo root:
+powershell -ExecutionPolicy Bypass -File .\typecheck.ps1      # non-UI
+powershell -ExecutionPolicy Bypass -File .\typecheck-ui.ps1   # SwiftUI
+```
+
+Both should print `ExitCode=0`. Full type-checking isn't available on Windows
+because it needs Visual Studio Build Tools for `errno.h` + the WinSDK module —
+the real compile runs in Xcode on the Mac.
+
 ## Mac setup (one time)
 
 1. Install Xcode 15+ from the Mac App Store.
