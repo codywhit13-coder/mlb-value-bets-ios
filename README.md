@@ -48,27 +48,45 @@ the real compile runs in Xcode on the Mac.
 
 ## Mac setup (one time)
 
-1. Install Xcode 15+ from the Mac App Store.
-2. Clone this repo:
-   ```bash
-   git clone https://github.com/<you>/mlb-value-bets-ios.git
-   cd mlb-value-bets-ios
-   ```
-3. Open Xcode → **File → New → Project** → iOS → App:
-   - Product Name: `MLBValueBets`
-   - Bundle ID: `com.titanstack.mlbvaluebets`
-   - Interface: SwiftUI
-   - Language: Swift
-   - Storage: None
-   - **Save into this repo folder** (next to the existing `MLBValueBets/` tree).
-4. In Finder, delete the empty `MLBValueBets/` Xcode just created and drag the
-   existing `MLBValueBets/` folder from the repo into the Xcode project
-   navigator (choose **Create groups**, uncheck "Copy items if needed").
-5. **File → Add Package Dependencies** → add:
-   - `https://github.com/supabase/supabase-swift` (pick "Supabase" product)
-6. Set the iOS deployment target to **17.0**.
-7. Build ⌘B — should compile clean.
-8. Run on the iPhone 15 Pro simulator.
+The Xcode project is generated from `project.yml` via
+[XcodeGen](https://github.com/yonaskolb/XcodeGen) — no clicking through the
+Xcode GUI required.
+
+```bash
+# 1. Install Xcode 15+ from the Mac App Store.
+
+# 2. Install XcodeGen (one-time).
+brew install xcodegen
+
+# 3. Clone the repo.
+git clone https://github.com/codywhit13-coder/mlb-value-bets-ios.git
+cd mlb-value-bets-ios
+
+# 4. Generate the Xcode project from project.yml.
+xcodegen generate
+
+# 5. Open it.
+open MLBValueBets.xcodeproj
+
+# 6. ⌘B to build. Xcode will fetch the Supabase Swift package automatically.
+```
+
+That's it. The bundle ID (`com.titanstack.mlbvaluebets`), deployment target
+(iOS 17.0), SwiftUI previews, Supabase package dependency, asset catalog,
+dark-mode lock, portrait-only, and iPhone-only device family are all
+pre-configured in `project.yml`.
+
+### Regenerating the project
+If `MLBValueBets.xcodeproj` ever gets corrupted or out of sync after adding
+files, just delete it and run `xcodegen generate` again. The `.xcodeproj` is
+gitignored — the only source of truth is `project.yml` + the files under
+`MLBValueBets/`.
+
+### Setting your signing team
+First build will fail with "Signing for 'MLBValueBets' requires a development
+team." In Xcode, select the project → Signing & Capabilities → pick your team
+from the dropdown. This lives in your local `.xcodeproj` and is **not**
+committed.
 
 ## Configuration
 

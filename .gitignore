@@ -7,6 +7,10 @@ DerivedData/
 *.xcscmblueprint
 *.xccheckout
 
+# XcodeGen generates these from project.yml — never commit them
+MLBValueBets.xcodeproj/
+MLBValueBets.xcworkspace/
+
 # Swift Package Manager
 .build/
 .swiftpm/

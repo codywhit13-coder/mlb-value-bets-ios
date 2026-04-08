@@ -1,0 +1,80 @@
+# XcodeGen project definition.
+# Regenerate the Xcode project by running `xcodegen generate` from this folder.
+# Install once: `brew install xcodegen`.
+#
+# This file is the source of truth. The generated `MLBValueBets.xcodeproj`
+# is gitignored — if it ever gets out of sync, delete it and rerun xcodegen.
+
+name: MLBValueBets
+
+options:
+  bundleIdPrefix: com.titanstack
+  deploymentTarget:
+    iOS: "17.0"
+  xcodeVersion: "15.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+  developmentLanguage: en
+  groupSortPosition: top
+  transitivelyLinkDependencies: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    ENABLE_MODULE_VERIFIER: NO
+    DEAD_CODE_STRIPPING: YES
+    CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER: YES
+    GCC_WARN_UNUSED_FUNCTION: YES
+    SWIFT_EMIT_LOC_STRINGS: YES
+
+packages:
+  Supabase:
+    url: https://github.com/supabase/supabase-swift
+    from: 2.0.0
+
+targets:
+  MLBValueBets:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: MLBValueBets
+        excludes:
+          - "**/.DS_Store"
+    dependencies:
+      - package: Supabase
+        product: Supabase
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.titanstack.mlbvaluebets
+        PRODUCT_NAME: MLBValueBets
+        # Modern Xcode: generate Info.plist from build settings
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: MLB Value Bets
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.sports
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIStatusBarStyle: UIStatusBarStyleLightContent
+        INFOPLIST_KEY_UIUserInterfaceStyle: Dark
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait"
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        # Asset catalog
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        # iPhone only for Phase 1 (no iPad yet)
+        TARGETED_DEVICE_FAMILY: "1"
+        # SwiftUI previews
+        ENABLE_PREVIEWS: YES
+        # App Store compliance niceties
+        CLANG_ENABLE_MODULE_DEBUGGING: NO
+      configs:
+        Debug:
+          SWIFT_OPTIMIZATION_LEVEL: "-Onone"
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: "DEBUG"
+          GCC_PREPROCESSOR_DEFINITIONS: "DEBUG=1"
+        Release:
+          SWIFT_OPTIMIZATION_LEVEL: "-O"
+          SWIFT_COMPILATION_MODE: wholemodule
