@@ -79,11 +79,10 @@ jobs:
             | xcbeautify --renderer github-actions
 
       - name: Run snapshot tests
-        # First run fails because no reference snapshots exist yet — that's
-        # expected. The PNGs get written to MLBValueBetsTests/__Snapshots__/
-        # and are uploaded as an artifact below. After the user commits the
-        # baselines, remove `continue-on-error` to enforce strict comparison.
-        continue-on-error: true
+        # Compares rendered views against the committed baselines in
+        # MLBValueBetsTests/__Snapshots__/. Any visual regression fails the
+        # build. New snapshots (if a test is added) still get written to the
+        # same folder and uploaded as an artifact for review.
         run: |
           set -o pipefail
           xcodebuild test \
