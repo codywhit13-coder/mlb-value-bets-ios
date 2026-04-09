@@ -136,3 +136,78 @@ extension LivePerformance {
         endDate: "2026-04-08"
     )
 }
+
+// MARK: - PicksResponse fixtures for full-screen tests
+
+extension PicksResponse {
+
+    /// Free-tier response — 3 visible picks (2 unlocked + 1 locked) out of 8
+    /// total picks behind the paywall. Exercises the DashboardView tier badge,
+    /// hidden count, and the mixed locked/unlocked list layout.
+    static let mockFree = PicksResponse(
+        date: "2026-04-09",
+        generatedAt: "2026-04-09T10:30:00Z",
+        valueBets: [
+            .mockHighEdge,
+            .mockMediumEdge,
+            .mockLocked
+        ],
+        tier: "free",
+        totalBets: 3,
+        totalBetsAll: 8,
+        totalBets5Pct: 2,
+        gamesToday: 12
+    )
+
+    /// Pro-tier response — all picks visible, no locked placeholders.
+    /// Exercises the "PRO" tier badge and the full unlocked list.
+    static let mockPro = PicksResponse(
+        date: "2026-04-09",
+        generatedAt: "2026-04-09T10:30:00Z",
+        valueBets: [
+            .mockHighEdge,
+            .mockMediumEdge,
+            .mockRunlineWin
+        ],
+        tier: "pro",
+        totalBets: 3,
+        totalBetsAll: 3,
+        totalBets5Pct: 2,
+        gamesToday: 12
+    )
+
+    /// Wide list for PicksListView — 4 picks spanning all markets so the
+    /// filter bar (All / Moneyline / Total / Run Line) is meaningful.
+    static let mockWideList = PicksResponse(
+        date: "2026-04-09",
+        generatedAt: "2026-04-09T10:30:00Z",
+        valueBets: [
+            .mockHighEdge,     // moneyline, unlocked
+            .mockMediumEdge,   // total, unlocked
+            .mockRunlineWin,   // runline, settled win
+            .mockLocked        // moneyline, locked
+        ],
+        tier: "free",
+        totalBets: 4,
+        totalBetsAll: 9,
+        totalBets5Pct: 3,
+        gamesToday: 12
+    )
+}
+
+// MARK: - UserProfile fixtures for SettingsView + tier badges
+
+extension UserProfile {
+
+    static let mockFree = UserProfile(
+        id: "00000000-0000-0000-0000-000000000001",
+        email: "free.user@example.com",
+        tier: .free
+    )
+
+    static let mockPro = UserProfile(
+        id: "00000000-0000-0000-0000-000000000002",
+        email: "pro.user@example.com",
+        tier: .pro
+    )
+}

@@ -140,4 +140,177 @@ final class ViewSnapshotTests: XCTestCase {
             )
         )
     }
+
+    // MARK: - LoginView (full screen, iPhone 13 Pro portrait)
+
+    func test_LoginView_empty() {
+        let vm = AuthViewModel()
+        // Ensure a clean initial state regardless of any async session check.
+        vm.email = ""
+        vm.password = ""
+        vm.errorMessage = nil
+        vm.isWorking = false
+
+        let view = LoginView(vm: vm)
+            .preferredColorScheme(.dark)
+
+        assertSnapshot(
+            of: view,
+            as: .image(
+                perceptualPrecision: 0.95,
+                layout: .device(config: .iPhone13Pro)
+            )
+        )
+    }
+
+    func test_LoginView_errorState() {
+        let vm = AuthViewModel()
+        vm.email = "user@example.com"
+        vm.password = "wrongpass"
+        vm.errorMessage = AuthError.invalidCredentials.errorDescription
+        vm.isWorking = false
+
+        let view = LoginView(vm: vm)
+            .preferredColorScheme(.dark)
+
+        assertSnapshot(
+            of: view,
+            as: .image(
+                perceptualPrecision: 0.95,
+                layout: .device(config: .iPhone13Pro)
+            )
+        )
+    }
+
+    // MARK: - DashboardView
+
+    func test_DashboardView_freeTier_loaded() {
+        let vm = DashboardViewModel()
+        vm.todayResponse = .mockFree
+        vm.liveRecord = .mockRecord
+        vm.isLoading = false
+
+        let auth = AuthViewModel()
+        auth.isSignedIn = true
+        auth.currentUser = .mockFree
+
+        let view = DashboardView(vm: vm)
+            .environment(auth)
+            .preferredColorScheme(.dark)
+
+        assertSnapshot(
+            of: view,
+            as: .image(
+                perceptualPrecision: 0.95,
+                layout: .device(config: .iPhone13Pro)
+            )
+        )
+    }
+
+    func test_DashboardView_proTier_loaded() {
+        let vm = DashboardViewModel()
+        vm.todayResponse = .mockPro
+        vm.liveRecord = .mockRecord
+        vm.isLoading = false
+
+        let auth = AuthViewModel()
+        auth.isSignedIn = true
+        auth.currentUser = .mockPro
+
+        let view = DashboardView(vm: vm)
+            .environment(auth)
+            .preferredColorScheme(.dark)
+
+        assertSnapshot(
+            of: view,
+            as: .image(
+                perceptualPrecision: 0.95,
+                layout: .device(config: .iPhone13Pro)
+            )
+        )
+    }
+
+    // MARK: - PicksListView
+
+    func test_PicksListView_allFilter() {
+        let vm = PicksViewModel()
+        vm.response = .mockWideList
+        vm.selectedMarket = .all
+        vm.isLoading = false
+
+        let view = NavigationStack {
+            PicksListView(vm: vm)
+        }
+        .preferredColorScheme(.dark)
+
+        assertSnapshot(
+            of: view,
+            as: .image(
+                perceptualPrecision: 0.95,
+                layout: .device(config: .iPhone13Pro)
+            )
+        )
+    }
+
+    func test_PicksListView_totalsFilter() {
+        let vm = PicksViewModel()
+        vm.response = .mockWideList
+        vm.selectedMarket = .total
+        vm.isLoading = false
+
+        let view = NavigationStack {
+            PicksListView(vm: vm)
+        }
+        .preferredColorScheme(.dark)
+
+        assertSnapshot(
+            of: view,
+            as: .image(
+                perceptualPrecision: 0.95,
+                layout: .device(config: .iPhone13Pro)
+            )
+        )
+    }
+
+    // MARK: - SettingsView
+
+    func test_SettingsView_freeTier() {
+        let auth = AuthViewModel()
+        auth.isSignedIn = true
+        auth.currentUser = .mockFree
+
+        let view = NavigationStack {
+            SettingsView()
+        }
+        .environment(auth)
+        .preferredColorScheme(.dark)
+
+        assertSnapshot(
+            of: view,
+            as: .image(
+                perceptualPrecision: 0.95,
+                layout: .device(config: .iPhone13Pro)
+            )
+        )
+    }
+
+    func test_SettingsView_proTier() {
+        let auth = AuthViewModel()
+        auth.isSignedIn = true
+        auth.currentUser = .mockPro
+
+        let view = NavigationStack {
+            SettingsView()
+        }
+        .environment(auth)
+        .preferredColorScheme(.dark)
+
+        assertSnapshot(
+            of: view,
+            as: .image(
+                perceptualPrecision: 0.95,
+                layout: .device(config: .iPhone13Pro)
+            )
+        )
+    }
 }

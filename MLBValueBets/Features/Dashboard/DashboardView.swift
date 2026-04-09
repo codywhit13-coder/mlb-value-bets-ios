@@ -6,8 +6,12 @@
 import SwiftUI
 
 struct DashboardView: View {
-    @State private var vm = DashboardViewModel()
+    @State private var vm: DashboardViewModel
     @Environment(AuthViewModel.self) private var auth
+
+    init(vm: DashboardViewModel = DashboardViewModel()) {
+        _vm = State(initialValue: vm)
+    }
 
     var body: some View {
         NavigationStack {

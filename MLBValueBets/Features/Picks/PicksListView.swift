@@ -6,7 +6,11 @@
 import SwiftUI
 
 struct PicksListView: View {
-    @State private var vm = PicksViewModel()
+    @State private var vm: PicksViewModel
+
+    init(vm: PicksViewModel = PicksViewModel()) {
+        _vm = State(initialValue: vm)
+    }
 
     var body: some View {
         ZStack {
