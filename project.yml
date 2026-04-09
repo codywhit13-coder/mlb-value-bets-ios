@@ -35,6 +35,9 @@ packages:
   Supabase:
     url: https://github.com/supabase/supabase-swift
     from: 2.0.0
+  SnapshotTesting:
+    url: https://github.com/pointfreeco/swift-snapshot-testing
+    from: 1.15.0
 
 targets:
   MLBValueBets:
@@ -48,6 +51,10 @@ targets:
     dependencies:
       - package: Supabase
         product: Supabase
+    scheme:
+      testTargets:
+        - MLBValueBetsTests
+      gatherCoverageData: false
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.titanstack.mlbvaluebets
@@ -81,3 +88,24 @@ targets:
         Release:
           SWIFT_OPTIMIZATION_LEVEL: "-O"
           SWIFT_COMPILATION_MODE: wholemodule
+
+  MLBValueBetsTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: MLBValueBetsTests
+        excludes:
+          - "**/.DS_Store"
+    dependencies:
+      - target: MLBValueBets
+      - package: SnapshotTesting
+        product: SnapshotTesting
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.titanstack.mlbvaluebets.tests
+        GENERATE_INFOPLIST_FILE: YES
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/MLBValueBets.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MLBValueBets"
+        ENABLE_TESTING_SEARCH_PATHS: YES
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: "DEBUG"

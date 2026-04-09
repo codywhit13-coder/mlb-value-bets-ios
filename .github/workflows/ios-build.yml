@@ -78,6 +78,26 @@ jobs:
             ONLY_ACTIVE_ARCH=YES \
             | xcbeautify --renderer github-actions
 
+      - name: Run snapshot tests
+        # First run fails because no reference snapshots exist yet — that's
+        # expected. The PNGs get written to MLBValueBetsTests/__Snapshots__/
+        # and are uploaded as an artifact below. After the user commits the
+        # baselines, remove `continue-on-error` to enforce strict comparison.
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project "${PROJECT}" \
+            -scheme "${SCHEME}" \
+            -destination "${DESTINATION}" \
+            -configuration Debug \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            ONLY_ACTIVE_ARCH=YES \
+            -resultBundlePath build/TestResults.xcresult \
+            | xcbeautify --renderer github-actions
+
       - name: Upload .app bundle
         if: success()
         uses: actions/upload-artifact@v4
@@ -87,3 +107,21 @@ jobs:
             ~/Library/Developer/Xcode/DerivedData/MLBValueBets-*/Build/Products/Debug-iphonesimulator/MLBValueBets.app
           retention-days: 7
           if-no-files-found: warn
+
+      - name: Upload snapshot PNGs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapshots-${{ github.run_number }}
+          path: MLBValueBetsTests/__Snapshots__/**
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Upload test result bundle (debugging)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ github.run_number }}
+          path: build/TestResults.xcresult
+          retention-days: 7
+          if-no-files-found: ignore
