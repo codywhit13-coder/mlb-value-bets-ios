@@ -33,31 +33,14 @@ struct LockedPickCard: View {
                     .clipShape(Capsule())
             }
 
-            // Blurred body with lock overlay. A scrim sits directly on top of
-            // the blurred placeholder so the lock message never visually
-            // bleeds into the ghost content underneath.
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Recommended Bet")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(Color.brandTextMuted)
-                Text("████████")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(Color.brandTextPrimary)
-                HStack(spacing: 16) {
-                    Text("+██.██%")
-                    Text("+██.██%")
-                    Text("████")
-                }
-                .font(.system(size: 12, weight: .bold, design: .rounded))
-                .foregroundStyle(Color.brandTextMuted)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .blur(radius: 6)
-            .overlay(
+            // Locked body. A dimmed panel with the lock message centered —
+            // no blurred placeholder text underneath to visually bleed
+            // through. The card's visual weight is preserved via minHeight
+            // so it matches a real PickCard in a list.
+            ZStack {
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.brandSurface.opacity(0.78))
-            )
-            .overlay(
+                    .fill(Color.brandBackground.opacity(0.5))
+
                 VStack(spacing: 6) {
                     Image(systemName: "lock.fill")
                         .font(.system(size: 22))
@@ -69,7 +52,9 @@ struct LockedPickCard: View {
                         .font(.caption2)
                         .foregroundStyle(Color.brandTextSecondary)
                 }
-            )
+                .padding(.vertical, 14)
+            }
+            .frame(maxWidth: .infinity, minHeight: 110)
             .padding(.vertical, 6)
         }
         .padding(14)
