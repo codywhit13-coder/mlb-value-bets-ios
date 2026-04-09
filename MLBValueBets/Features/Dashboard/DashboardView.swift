@@ -10,8 +10,8 @@ struct DashboardView: View {
     @Environment(AuthViewModel.self) private var auth
 
     @MainActor
-    init(vm: DashboardViewModel = DashboardViewModel()) {
-        _vm = State(initialValue: vm)
+    init(vm: DashboardViewModel? = nil) {
+        _vm = State(initialValue: vm ?? DashboardViewModel())
     }
 
     var body: some View {

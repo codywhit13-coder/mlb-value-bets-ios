@@ -9,8 +9,8 @@ struct PicksListView: View {
     @State private var vm: PicksViewModel
 
     @MainActor
-    init(vm: PicksViewModel = PicksViewModel()) {
-        _vm = State(initialValue: vm)
+    init(vm: PicksViewModel? = nil) {
+        _vm = State(initialValue: vm ?? PicksViewModel())
     }
 
     var body: some View {
