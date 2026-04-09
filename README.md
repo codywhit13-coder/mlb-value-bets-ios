@@ -1,5 +1,7 @@
 # MLB Value Bets — iOS
 
+[![iOS Build](https://github.com/codywhit13-coder/mlb-value-bets-ios/actions/workflows/ios-build.yml/badge.svg)](https://github.com/codywhit13-coder/mlb-value-bets-ios/actions/workflows/ios-build.yml)
+
 Native iOS companion app for [mlbvaluebets.com](https://mlbvaluebets.com).
 Shares the same Supabase auth and Stripe subscriptions as the web — ships as an
 App Store **Reader App** (no in-app pricing or signup).
@@ -46,11 +48,36 @@ Both should print `ExitCode=0`. Full type-checking isn't available on Windows
 because it needs Visual Studio Build Tools for `errno.h` + the WinSDK module —
 the real compile runs in Xcode on the Mac.
 
-## Mac setup (one time)
+## Cloud builds (no Mac required)
+
+Every push to `master` triggers a build on a free GitHub Actions macOS runner.
+The workflow runs `xcodegen generate` and then `xcodebuild` against the iPhone
+15 Pro simulator — no signing, no Apple Developer Program needed for this
+phase, just proves the code compiles.
+
+Watch builds at:
+[github.com/codywhit13-coder/mlb-value-bets-ios/actions](https://github.com/codywhit13-coder/mlb-value-bets-ios/actions)
+
+The compiled `.app` bundle is uploaded as a build artifact (retained 7 days).
+You can download it from any successful build's "Artifacts" section.
+
+### Cost
+GitHub's free tier on private repos = 2,000 CI minutes/month, but **macOS
+minutes count 10×**, so effectively ~200 macOS minutes ≈ 15-25 builds/month.
+Beyond that: $0.08/minute. To unlock unlimited macOS minutes, make the repo
+public (the Supabase anon key is already public on the web frontend, so it's
+not actually a secret).
+
+### Trigger a build manually
+Go to **Actions → iOS Build → Run workflow** in the GitHub UI, or push any
+commit to `master`.
+
+## Mac setup (one time, optional)
 
 The Xcode project is generated from `project.yml` via
 [XcodeGen](https://github.com/yonaskolb/XcodeGen) — no clicking through the
-Xcode GUI required.
+Xcode GUI required. Only needed if you want to run the simulator interactively
+on a real Mac.
 
 ```bash
 # 1. Install Xcode 15+ from the Mac App Store.

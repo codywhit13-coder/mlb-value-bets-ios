@@ -1,0 +1,84 @@
+name: iOS Build
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+# Avoid burning macOS minutes on duplicate builds
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build (iOS Simulator, no signing)
+    runs-on: macos-14
+    timeout-minutes: 30
+
+    env:
+      PROJECT: MLBValueBets.xcodeproj
+      SCHEME: MLBValueBets
+      DESTINATION: "platform=iOS Simulator,name=iPhone 15 Pro,OS=latest"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Xcode + macOS info
+        run: |
+          sw_vers
+          xcodebuild -version
+          xcode-select -p
+          ls /Applications | grep -i xcode || true
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project from project.yml
+        run: |
+          xcodegen generate
+          ls -la "${PROJECT}"
+
+      - name: Resolve Swift package dependencies
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project "${PROJECT}" \
+            -scheme "${SCHEME}"
+
+      - name: Show resolved package versions
+        run: |
+          if [ -f "${PROJECT}/project.xcworkspace/xcshareddata/swiftpm/Package.resolved" ]; then
+            cat "${PROJECT}/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
+          else
+            echo "No Package.resolved found yet"
+          fi
+
+      - name: List available simulators
+        run: xcrun simctl list devices available | head -50
+
+      - name: Build for iOS Simulator
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project "${PROJECT}" \
+            -scheme "${SCHEME}" \
+            -destination "${DESTINATION}" \
+            -configuration Debug \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            ONLY_ACTIVE_ARCH=YES \
+            | xcbeautify --renderer github-actions
+
+      - name: Upload .app bundle
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: MLBValueBets-Debug-Simulator
+          path: |
+            ~/Library/Developer/Xcode/DerivedData/MLBValueBets-*/Build/Products/Debug-iphonesimulator/MLBValueBets.app
+          retention-days: 7
+          if-no-files-found: warn
