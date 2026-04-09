@@ -34,9 +34,12 @@ final class CodableTests: XCTestCase {
         XCTAssertEqual(live.pushes, 0)
         XCTAssertEqual(live.roi, 0.103)
 
+        // Backend DOES return total_bets — iOS model decodes it via
+        // .convertFromSnakeCase (total_bets -> totalBets).
+        XCTAssertEqual(live.totalBets, 91)
+
         // Fields the backend does NOT return — must decode to nil, not crash.
         XCTAssertNil(live.unitsProfit, "Backend does not return units_profit")
-        XCTAssertNil(live.totalBets, "Backend /live uses total_bets for a different count; iOS model ignores it")
         XCTAssertNil(live.startDate)
         XCTAssertNil(live.endDate)
 
