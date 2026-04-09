@@ -8,6 +8,7 @@ import SwiftUI
 struct PicksListView: View {
     @State private var vm: PicksViewModel
 
+    @MainActor
     init(vm: PicksViewModel = PicksViewModel()) {
         _vm = State(initialValue: vm)
     }

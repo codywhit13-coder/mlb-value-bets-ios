@@ -17,6 +17,7 @@ import SwiftUI
 import SnapshotTesting
 @testable import MLBValueBets
 
+@MainActor
 final class ViewSnapshotTests: XCTestCase {
 
     override class func setUp() {

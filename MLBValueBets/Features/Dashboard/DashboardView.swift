@@ -9,6 +9,7 @@ struct DashboardView: View {
     @State private var vm: DashboardViewModel
     @Environment(AuthViewModel.self) private var auth
 
+    @MainActor
     init(vm: DashboardViewModel = DashboardViewModel()) {
         _vm = State(initialValue: vm)
     }
