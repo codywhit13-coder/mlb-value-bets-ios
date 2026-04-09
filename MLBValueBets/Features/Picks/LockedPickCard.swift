@@ -16,11 +16,13 @@ struct LockedPickCard: View {
         VStack(alignment: .leading, spacing: 10) {
 
             // Header row
-            HStack(alignment: .firstTextBaseline) {
+            HStack(alignment: .top) {
                 Text(pick.game)
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(Color.brandTextPrimary)
-                    .lineLimit(1)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.9)
+                    .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 8)
                 Text(pick.market.capitalized)
                     .font(.system(size: 10, weight: .semibold))
@@ -31,27 +33,32 @@ struct LockedPickCard: View {
                     .clipShape(Capsule())
             }
 
-            // Blurred body
-            ZStack {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Recommended Bet")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(Color.brandTextMuted)
-                    Text("████████")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundStyle(Color.brandTextPrimary)
-                    HStack(spacing: 16) {
-                        Text("+██.██%")
-                        Text("+██.██%")
-                        Text("████")
-                    }
-                    .font(.system(size: 12, weight: .bold, design: .rounded))
+            // Blurred body with lock overlay. A scrim sits directly on top of
+            // the blurred placeholder so the lock message never visually
+            // bleeds into the ghost content underneath.
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Recommended Bet")
+                    .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(Color.brandTextMuted)
+                Text("████████")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(Color.brandTextPrimary)
+                HStack(spacing: 16) {
+                    Text("+██.██%")
+                    Text("+██.██%")
+                    Text("████")
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .blur(radius: 6)
-
-                VStack(spacing: 8) {
+                .font(.system(size: 12, weight: .bold, design: .rounded))
+                .foregroundStyle(Color.brandTextMuted)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .blur(radius: 6)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color.brandSurface.opacity(0.78))
+            )
+            .overlay(
+                VStack(spacing: 6) {
                     Image(systemName: "lock.fill")
                         .font(.system(size: 22))
                         .foregroundStyle(Color.brandAmber)
@@ -62,7 +69,7 @@ struct LockedPickCard: View {
                         .font(.caption2)
                         .foregroundStyle(Color.brandTextSecondary)
                 }
-            }
+            )
             .padding(.vertical, 6)
         }
         .padding(14)

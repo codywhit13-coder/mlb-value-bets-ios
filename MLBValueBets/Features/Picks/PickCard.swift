@@ -15,11 +15,13 @@ struct PickCard: View {
         VStack(alignment: .leading, spacing: 10) {
 
             // Top row: matchup + market chip
-            HStack(alignment: .firstTextBaseline) {
+            HStack(alignment: .top) {
                 Text(pick.game)
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(Color.brandTextPrimary)
-                    .lineLimit(1)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.9)
+                    .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 8)
                 Text(pick.market.capitalized)
                     .font(.system(size: 10, weight: .semibold))

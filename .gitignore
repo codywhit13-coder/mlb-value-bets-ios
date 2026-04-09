@@ -67,3 +67,10 @@ GoogleService-Info.plist
 .env
 .env.local
 secrets.xcconfig
+
+# Local scratch: downloaded CI snapshot artifacts + parse-check output
+.tmp-snapshots/
+ui-stdout.txt
+ui-stderr.txt
+typecheck-stdout.txt
+typecheck-stderr.txt
