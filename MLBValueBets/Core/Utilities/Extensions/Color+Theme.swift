@@ -88,11 +88,13 @@ extension Color {
 
     // MARK: - Helpers
 
-    /// Edge color based on confidence tier, matching the web design.
-    /// High confidence is BLUE on the web — that was the smoking gun.
+    /// Edge color based on confidence tier, matching the web's PickCard.tsx:
+    ///   high   → #22C55E (green)
+    ///   medium → var(--amber) = #F5A623
+    ///   low    → rgba(255,255,255,0.40)
     static func edgeColor(for tier: Pick.ConfidenceTier) -> Color {
         switch tier {
-        case .high:   return .brandBlue
+        case .high:   return .winGreen
         case .medium: return .brandAmber
         case .low:    return .brandTextMuted
         case .none:   return .brandTextMuted
