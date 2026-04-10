@@ -208,6 +208,107 @@ extension PicksResponse {
     )
 }
 
+// MARK: - Settled picks for HistoryView
+
+extension Pick {
+    /// Settled loss — for history list diversity.
+    static let mockSettledLoss = Pick(
+        game: "Chicago Cubs @ Milwaukee Brewers",
+        market: "moneyline",
+        side: "Chicago Cubs",
+        modelProb: 0.542,
+        impliedProb: 0.488,
+        edgePct: 5.4,
+        fairOdds: -118,
+        bookOdds: 105,
+        kellyFraction: 0.018,
+        lineMove: 3,
+        sharpSignal: false,
+        crossBookSpread: 6.0,
+        pinnacleEdge: 0.5,
+        pinnacleConfirms: false,
+        confidence: "low",
+        book: "DraftKings",
+        outcome: "loss",
+        locked: false,
+        valueBet: false,
+        gameTime: "2026-04-08T23:10:00Z",
+        closingOdds: 110,
+        clvPct: -1.2,
+        evPct: 1.8,
+        modelTotal: nil
+    )
+
+    /// Settled push — for history list diversity.
+    static let mockSettledPush = Pick(
+        game: "San Diego Padres @ Arizona Diamondbacks",
+        market: "runline",
+        side: "Arizona Diamondbacks +1.5",
+        modelProb: 0.612,
+        impliedProb: 0.556,
+        edgePct: 5.6,
+        fairOdds: -158,
+        bookOdds: -125,
+        kellyFraction: 0.020,
+        lineMove: 2,
+        sharpSignal: false,
+        crossBookSpread: 4.0,
+        pinnacleEdge: 0.3,
+        pinnacleConfirms: false,
+        confidence: "medium",
+        book: "FanDuel",
+        outcome: "push",
+        locked: false,
+        valueBet: false,
+        gameTime: "2026-04-07T01:40:00Z",
+        closingOdds: -120,
+        clvPct: 1.5,
+        evPct: 2.2,
+        modelTotal: nil
+    )
+
+    /// Second win on a different day for multi-day grouping.
+    static let mockSettledWinDay2 = Pick(
+        game: "Tampa Bay Rays @ Baltimore Orioles",
+        market: "moneyline",
+        side: "Tampa Bay Rays",
+        modelProb: 0.580,
+        impliedProb: 0.510,
+        edgePct: 7.0,
+        fairOdds: -138,
+        bookOdds: -104,
+        kellyFraction: 0.025,
+        lineMove: 5,
+        sharpSignal: true,
+        crossBookSpread: 9.0,
+        pinnacleEdge: 1.2,
+        pinnacleConfirms: true,
+        confidence: "medium",
+        book: "BetMGM",
+        outcome: "win",
+        locked: false,
+        valueBet: true,
+        gameTime: "2026-04-07T23:05:00Z",
+        closingOdds: -110,
+        clvPct: 2.1,
+        evPct: 3.6,
+        modelTotal: nil
+    )
+}
+
+/// Mock history arrays for snapshot tests
+extension Array where Element == Pick {
+    /// Two days of settled picks: Apr 8 (2 picks) and Apr 7 (2 picks).
+    static let mockHistory: [Pick] = [
+        // Day 1: April 8 — 1W 1L
+        .mockRunlineWin,     // gameTime 2026-04-08T20:10:00Z → win
+        .mockSettledLoss,    // gameTime 2026-04-08T23:10:00Z → loss
+        // Day 2: April 7 — 1W 1P
+        .mockSettledWinDay2, // gameTime 2026-04-07T23:05:00Z → win
+        .mockSettledPush,    // gameTime 2026-04-07T01:40:00Z → push
+    ]
+}
+
 // MARK: - UserProfile fixtures for SettingsView + tier badges
 
 extension UserProfile {

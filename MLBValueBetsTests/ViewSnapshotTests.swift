@@ -33,7 +33,8 @@ final class ViewSnapshotTests: XCTestCase {
         // new PNG to MLBValueBetsTests/__Snapshots__/, which the workflow's
         // "Upload snapshot PNGs" step bundles into the artifact. Download,
         // commit the PNGs, and flip back to false.
-        // isRecording = true
+        // TEMPORARY: recording baselines for History tab tests.
+        isRecording = true
     }
 
     // MARK: - PickCard
@@ -438,6 +439,65 @@ final class ViewSnapshotTests: XCTestCase {
             SettingsView()
         }
         .environment(auth)
+        .preferredColorScheme(.dark)
+
+        assertSnapshot(
+            of: view,
+            as: .image(
+                perceptualPrecision: 0.95,
+                layout: .device(config: .iPhone13Pro)
+            )
+        )
+    }
+
+    // MARK: - HistoryView
+
+    func test_HistoryView_loaded() {
+        let vm = HistoryViewModel()
+        vm.allPicks = .mockHistory
+        vm.isLoading = false
+
+        let view = NavigationStack {
+            HistoryView(vm: vm)
+        }
+        .preferredColorScheme(.dark)
+
+        assertSnapshot(
+            of: view,
+            as: .image(
+                perceptualPrecision: 0.95,
+                layout: .device(config: .iPhone13Pro)
+            )
+        )
+    }
+
+    func test_HistoryView_empty() {
+        let vm = HistoryViewModel()
+        vm.allPicks = []
+        vm.isLoading = false
+
+        let view = NavigationStack {
+            HistoryView(vm: vm)
+        }
+        .preferredColorScheme(.dark)
+
+        assertSnapshot(
+            of: view,
+            as: .image(
+                perceptualPrecision: 0.95,
+                layout: .device(config: .iPhone13Pro)
+            )
+        )
+    }
+
+    func test_HistoryView_error() {
+        let vm = HistoryViewModel()
+        vm.errorMessage = "Failed to load history. Please try again."
+        vm.isLoading = false
+
+        let view = NavigationStack {
+            HistoryView(vm: vm)
+        }
         .preferredColorScheme(.dark)
 
         assertSnapshot(

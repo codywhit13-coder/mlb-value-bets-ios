@@ -60,6 +60,12 @@ private struct MainTabView: View {
                 Label("All Picks", systemImage: "list.bullet.rectangle")
             }
             NavigationStack {
+                HistoryView()
+            }
+            .tabItem {
+                Label("History", systemImage: "clock.arrow.circlepath")
+            }
+            NavigationStack {
                 SettingsView()
             }
             .tabItem {
