@@ -13,6 +13,7 @@ import UIKit
 struct MLBValueBetsApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var auth = AuthViewModel()
+    @State private var router = DeepLinkRouter()
 
     init() {
         // Register Bebas Neue / Barlow / IBM Plex Mono with Core Text before
@@ -26,8 +27,12 @@ struct MLBValueBetsApp: App {
         WindowGroup {
             RootView()
                 .environment(auth)
+                .environment(router)
                 .preferredColorScheme(.dark)
                 .tint(Color.brandBlue)
+                .onOpenURL { url in
+                    router.handle(url)
+                }
         }
     }
 }
@@ -81,27 +86,34 @@ private struct RootView: View {
 }
 
 private struct MainTabView: View {
+    @Environment(DeepLinkRouter.self) private var router
+
     var body: some View {
-        TabView {
+        @Bindable var router = router
+        TabView(selection: $router.selectedTab) {
             DashboardView()
+                .tag(DeepLinkRouter.Tab.dashboard)
                 .tabItem {
                     Label("Dashboard", systemImage: "chart.bar.fill")
                 }
             NavigationStack {
                 PicksListView()
             }
+            .tag(DeepLinkRouter.Tab.picks)
             .tabItem {
                 Label("All Picks", systemImage: "list.bullet.rectangle")
             }
             NavigationStack {
                 HistoryView()
             }
+            .tag(DeepLinkRouter.Tab.history)
             .tabItem {
                 Label("History", systemImage: "clock.arrow.circlepath")
             }
             NavigationStack {
                 SettingsView()
             }
+            .tag(DeepLinkRouter.Tab.settings)
             .tabItem {
                 Label("Settings", systemImage: "gearshape.fill")
             }
