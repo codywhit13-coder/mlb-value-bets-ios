@@ -146,18 +146,6 @@ struct HistoryView: View {
                     .font(Theme.Font.data(13, weight: .semibold))
                     .foregroundStyle(Color.brandTextPrimary)
 
-                // Thin divider
-                Rectangle()
-                    .fill(Color.brandBorder)
-                    .frame(width: 1, height: 14)
-
-                // Units +/-
-                Text(String(format: "%+.1fu", section.unitsProfit))
-                    .font(Theme.Font.data(13, weight: .semibold))
-                    .foregroundStyle(
-                        section.unitsProfit >= 0 ? Color.winGreen : Color.lossRed
-                    )
-
                 Spacer()
 
                 // Pick count

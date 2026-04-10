@@ -35,6 +35,18 @@ struct PickCard: View {
 
             // 3. Side + odds — the visual hero of the card
             HStack(alignment: .firstTextBaseline) {
+                // Team abbreviation pill
+                if let team = TeamBrand.brand(for: pick.side) {
+                    Text(team.abbreviation)
+                        .font(Theme.Font.overline(9))
+                        .tracking(1)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                        .background(team.color)
+                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                }
+
                 Text(pick.side)
                     .font(Theme.Font.heading(20, weight: .bold))
                     .foregroundStyle(Color.brandTextPrimary)
@@ -78,26 +90,45 @@ struct PickCard: View {
 
     // MARK: - Overline
 
-    private var overline: some View {
-        HStack(spacing: Theme.Spacing.sm) {
-            // Blue prefix bar — visual marker for "this is a section"
-            Rectangle()
-                .fill(Color.brandBlue)
-                .frame(width: 18, height: 1)
-            Text(overlineText)
-                .font(Theme.Font.overline(10))
-                .tracking(2)
-                .foregroundStyle(Color.brandBlue)
-            Spacer()
-        }
+    private var marketColor: Color {
+        MarketBrand.color(for: pick.market)
     }
 
-    private var overlineText: String {
-        let market = pick.market.uppercased()
-        if let book = pick.book?.uppercased() {
-            return "\(market)  ·  \(book)"
+    private var bookBrand: BookBrand {
+        BookBrand.brand(for: pick.book)
+    }
+
+    private var overline: some View {
+        HStack(spacing: Theme.Spacing.sm) {
+            // Prefix bar — market-colored
+            Rectangle()
+                .fill(marketColor)
+                .frame(width: 18, height: 1)
+
+            // Market name in market color
+            Text(pick.market.uppercased())
+                .font(Theme.Font.overline(10))
+                .tracking(2)
+                .foregroundStyle(marketColor)
+
+            if pick.book != nil {
+                // Dot separator
+                Text("·")
+                    .font(Theme.Font.overline(10))
+                    .foregroundStyle(Color.brandTextMuted)
+
+                // Sportsbook icon + name in book brand color
+                Image(systemName: bookBrand.icon)
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(bookBrand.color)
+                Text(pick.book!.uppercased())
+                    .font(Theme.Font.overline(10))
+                    .tracking(2)
+                    .foregroundStyle(bookBrand.color)
+            }
+
+            Spacer()
         }
-        return market
     }
 
     // MARK: - Stats strip
@@ -218,7 +249,7 @@ struct PickCard: View {
     }
 
     private var borderColor: Color {
-        isHighEdge ? Color.brandBlue.opacity(0.35) : Color.brandBorder
+        isHighEdge ? marketColor.opacity(0.35) : Color.brandBorder
     }
 
     private var borderWidth: CGFloat {
@@ -226,7 +257,7 @@ struct PickCard: View {
     }
 
     private var highEdgeShadow: Color {
-        isHighEdge ? Color.brandBlue.opacity(0.18) : .clear
+        isHighEdge ? marketColor.opacity(0.18) : .clear
     }
 
     // MARK: - Helpers

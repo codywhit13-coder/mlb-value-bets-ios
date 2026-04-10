@@ -35,29 +35,6 @@ final class HistoryViewModel {
             if pushes > 0 { return "\(wins)W \(losses)L \(pushes)P" }
             return "\(wins)W \(losses)L"
         }
-
-        /// Units profit for the day (1u flat bet model).
-        var unitsProfit: Double {
-            picks.reduce(0.0) { total, pick in
-                guard let outcome = pick.outcome?.lowercased() else { return total }
-                switch outcome {
-                case "win":
-                    // Positive odds: profit = odds/100. Negative: profit = 100/|odds|.
-                    if let odds = pick.bookOdds {
-                        if odds > 0 {
-                            return total + Double(odds) / 100.0
-                        } else {
-                            return total + 100.0 / Double(abs(odds))
-                        }
-                    }
-                    return total + 1.0  // Fallback to even money
-                case "loss":
-                    return total - 1.0
-                default:
-                    return total  // push = 0
-                }
-            }
-        }
     }
 
     var sections: [DaySection] {

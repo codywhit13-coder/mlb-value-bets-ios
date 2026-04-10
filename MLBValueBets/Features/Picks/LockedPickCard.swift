@@ -15,16 +15,16 @@ struct LockedPickCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.md) {
 
-            // Overline (matches PickCard exactly so locked + unlocked
-            // line up visually in a list)
+            // Overline — market-colored to match PickCard, but dimmed since
+            // the pick itself is locked. Still gives visual rhythm in a mixed list.
             HStack(spacing: Theme.Spacing.sm) {
                 Rectangle()
-                    .fill(Color.brandTextMuted)
+                    .fill(MarketBrand.color(for: pick.market).opacity(0.5))
                     .frame(width: 18, height: 1)
                 Text(pick.market.uppercased())
                     .font(Theme.Font.overline(10))
                     .tracking(2)
-                    .foregroundStyle(Color.brandTextMuted)
+                    .foregroundStyle(MarketBrand.color(for: pick.market).opacity(0.5))
                 Spacer()
             }
 
