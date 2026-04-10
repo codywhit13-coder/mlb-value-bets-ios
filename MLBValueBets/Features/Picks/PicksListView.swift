@@ -167,5 +167,7 @@ struct PicksListView: View {
                 )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(filter.rawValue) filter")
+        .accessibilityAddTraits(isActive ? .isSelected : [])
     }
 }

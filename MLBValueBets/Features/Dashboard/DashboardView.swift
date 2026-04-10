@@ -61,6 +61,10 @@ struct DashboardView: View {
                 if vm.todayResponse == nil {
                     await vm.load()
                 }
+                // Only count opens after a successful data load
+                if vm.todayResponse != nil {
+                    AppReviewService.recordAppOpen()
+                }
             }
             .onChange(of: vm.isSessionExpired) { _, expired in
                 if expired { Task { await auth.signOut() } }
@@ -171,6 +175,8 @@ struct DashboardView: View {
                     .stroke(Color.brandBorder, lineWidth: 1)
             )
             .shadow(color: Color.brandBlue.opacity(0.08), radius: 24, x: 0, y: 0)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(live.accessibilityLabel)
         }
     }
 

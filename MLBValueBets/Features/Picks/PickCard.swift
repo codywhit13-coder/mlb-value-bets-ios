@@ -94,6 +94,9 @@ struct PickCard: View {
                 .stroke(borderColor, lineWidth: borderWidth)
         )
         .shadow(color: highEdgeShadow, radius: 18, x: 0, y: 0)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(pick.accessibilityLabel)
+        .accessibilityHint(pick.accessibilityHint)
     }
 
     // MARK: - Overline

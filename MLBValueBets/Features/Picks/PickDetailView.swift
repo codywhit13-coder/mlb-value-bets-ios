@@ -45,6 +45,7 @@ struct PickDetailView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
+                    HapticService.medium()
                     SharePickService.share(pick)
                 } label: {
                     Image(systemName: "square.and.arrow.up")
@@ -173,6 +174,8 @@ struct PickDetailView: View {
             RoundedRectangle(cornerRadius: Theme.Radius.md)
                 .stroke(Color.brandBorder, lineWidth: 1)
         )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(label): \(value)")
     }
 
     // MARK: - Signals
