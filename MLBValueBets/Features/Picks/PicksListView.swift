@@ -30,46 +30,84 @@ struct PicksListView: View {
                         .padding(.horizontal, Theme.Spacing.lg)
                         .padding(.top, Theme.Spacing.sm)
 
-                    if let error = vm.errorMessage {
-                        Text(error)
-                            .font(Theme.Font.body(13))
-                            .foregroundStyle(Color.lossRed)
-                            .padding()
-                    } else if vm.filteredPicks.isEmpty && !vm.isLoading {
-                        Text("No picks match this filter.")
-                            .font(Theme.Font.body(13))
-                            .foregroundStyle(Color.brandTextSecondary)
-                            .padding(.vertical, Theme.Spacing.xxl)
-                    } else {
-                        LazyVStack(spacing: Theme.Spacing.md) {
-                            ForEach(vm.filteredPicks) { pick in
-                                if pick.locked {
-                                    LockedPickCard(pick: pick)
-                                } else {
-                                    NavigationLink {
-                                        PickDetailView(pick: pick)
-                                    } label: {
-                                        PickCard(pick: pick)
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                            }
-                        }
+                    content
                         .padding(.horizontal, Theme.Spacing.lg)
-                    }
                 }
                 .padding(.bottom, Theme.Spacing.xl)
             }
             .refreshable { await vm.refresh() }
-
-            if vm.isLoading && vm.response == nil {
-                ProgressView().tint(Color.brandBlue)
-            }
         }
         .navigationTitle("All Picks")
         .navigationBarTitleDisplayMode(.inline)
         .task {
             if vm.response == nil { await vm.load() }
+        }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        if let error = vm.errorMessage {
+            ErrorStateCard(message: error) {
+                Task { await vm.refresh() }
+            }
+        } else if vm.isLoading && vm.response == nil {
+            // First load — 4 skeleton cards for the list shape.
+            VStack(spacing: Theme.Spacing.md) {
+                PickCardSkeleton()
+                PickCardSkeleton()
+                PickCardSkeleton()
+                PickCardSkeleton()
+            }
+        } else if vm.filteredPicks.isEmpty {
+            EmptyStateView(
+                headline: emptyHeadline,
+                message: emptyMessage,
+                actionTitle: vm.selectedMarket == .all ? "Refresh" : "Show all",
+                action: emptyAction
+            )
+            .padding(.top, Theme.Spacing.lg)
+        } else {
+            LazyVStack(spacing: Theme.Spacing.md) {
+                ForEach(vm.filteredPicks) { pick in
+                    if pick.locked {
+                        LockedPickCard(pick: pick)
+                    } else {
+                        NavigationLink {
+                            PickDetailView(pick: pick)
+                        } label: {
+                            PickCard(pick: pick)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+    }
+
+    private var emptyHeadline: String {
+        vm.selectedMarket == .all ? "No picks today" : "No picks match"
+    }
+
+    private var emptyMessage: String {
+        switch vm.selectedMarket {
+        case .all:
+            return "Today's slate hasn't produced any value bets yet. Pull to refresh or check back closer to first pitch."
+        case .moneyline:
+            return "No moneyline value bets right now. Try another market or show all picks."
+        case .total:
+            return "No totals value bets right now. Try another market or show all picks."
+        case .runline:
+            return "No run line value bets right now. Try another market or show all picks."
+        }
+    }
+
+    private func emptyAction() {
+        if vm.selectedMarket == .all {
+            Task { await vm.refresh() }
+        } else {
+            withAnimation(Theme.Motion.spring) {
+                vm.selectedMarket = .all
+            }
         }
     }
 

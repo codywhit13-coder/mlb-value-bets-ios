@@ -33,7 +33,8 @@ final class ViewSnapshotTests: XCTestCase {
         // new PNG to MLBValueBetsTests/__Snapshots__/, which the workflow's
         // "Upload snapshot PNGs" step bundles into the artifact. Download,
         // commit the PNGs, and flip back to false.
-        // isRecording = true
+        // TEMPORARY: recording new baselines for the 6 production-state tests.
+        isRecording = true
     }
 
     // MARK: - PickCard
@@ -240,6 +241,73 @@ final class ViewSnapshotTests: XCTestCase {
         )
     }
 
+    func test_DashboardView_loading() {
+        let vm = DashboardViewModel()
+        // vm.todayResponse and vm.liveRecord stay nil
+        vm.isLoading = true
+
+        let auth = AuthViewModel()
+        auth.isSignedIn = true
+        auth.currentUser = .mockFree
+
+        let view = DashboardView(vm: vm)
+            .environment(auth)
+            .preferredColorScheme(.dark)
+
+        assertSnapshot(
+            of: view,
+            as: .image(
+                perceptualPrecision: 0.95,
+                layout: .device(config: .iPhone13Pro)
+            )
+        )
+    }
+
+    func test_DashboardView_empty() {
+        let vm = DashboardViewModel()
+        vm.todayResponse = .mockEmpty
+        vm.liveRecord = .mockRecord
+        vm.isLoading = false
+
+        let auth = AuthViewModel()
+        auth.isSignedIn = true
+        auth.currentUser = .mockFree
+
+        let view = DashboardView(vm: vm)
+            .environment(auth)
+            .preferredColorScheme(.dark)
+
+        assertSnapshot(
+            of: view,
+            as: .image(
+                perceptualPrecision: 0.95,
+                layout: .device(config: .iPhone13Pro)
+            )
+        )
+    }
+
+    func test_DashboardView_error() {
+        let vm = DashboardViewModel()
+        vm.errorMessage = "Service temporarily unavailable. Please try again in a moment."
+        vm.isLoading = false
+
+        let auth = AuthViewModel()
+        auth.isSignedIn = true
+        auth.currentUser = .mockFree
+
+        let view = DashboardView(vm: vm)
+            .environment(auth)
+            .preferredColorScheme(.dark)
+
+        assertSnapshot(
+            of: view,
+            as: .image(
+                perceptualPrecision: 0.95,
+                layout: .device(config: .iPhone13Pro)
+            )
+        )
+    }
+
     // MARK: - PicksListView
 
     func test_PicksListView_allFilter() {
@@ -266,6 +334,64 @@ final class ViewSnapshotTests: XCTestCase {
         let vm = PicksViewModel()
         vm.response = .mockWideList
         vm.selectedMarket = .total
+        vm.isLoading = false
+
+        let view = NavigationStack {
+            PicksListView(vm: vm)
+        }
+        .preferredColorScheme(.dark)
+
+        assertSnapshot(
+            of: view,
+            as: .image(
+                perceptualPrecision: 0.95,
+                layout: .device(config: .iPhone13Pro)
+            )
+        )
+    }
+
+    func test_PicksListView_loading() {
+        let vm = PicksViewModel()
+        // vm.response stays nil
+        vm.isLoading = true
+
+        let view = NavigationStack {
+            PicksListView(vm: vm)
+        }
+        .preferredColorScheme(.dark)
+
+        assertSnapshot(
+            of: view,
+            as: .image(
+                perceptualPrecision: 0.95,
+                layout: .device(config: .iPhone13Pro)
+            )
+        )
+    }
+
+    func test_PicksListView_empty() {
+        let vm = PicksViewModel()
+        vm.response = .mockEmpty
+        vm.selectedMarket = .all
+        vm.isLoading = false
+
+        let view = NavigationStack {
+            PicksListView(vm: vm)
+        }
+        .preferredColorScheme(.dark)
+
+        assertSnapshot(
+            of: view,
+            as: .image(
+                perceptualPrecision: 0.95,
+                layout: .device(config: .iPhone13Pro)
+            )
+        )
+    }
+
+    func test_PicksListView_error() {
+        let vm = PicksViewModel()
+        vm.errorMessage = "Network request timed out. Please check your connection."
         vm.isLoading = false
 
         let view = NavigationStack {

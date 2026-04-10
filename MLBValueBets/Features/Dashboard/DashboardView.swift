@@ -29,20 +29,17 @@ struct DashboardView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
                         hero
-                        recordStrip
+                        recordSection
                         topPicksSection
-                        viewAllButton
+                        if vm.todayResponse != nil && !vm.topPicks.isEmpty {
+                            viewAllButton
+                        }
                     }
                     .padding(.horizontal, Theme.Spacing.lg)
                     .padding(.top, Theme.Spacing.sm)
                     .padding(.bottom, Theme.Spacing.xxl)
                 }
                 .refreshable { await vm.refresh() }
-
-                if vm.isLoading && vm.todayResponse == nil {
-                    ProgressView()
-                        .tint(Color.brandBlue)
-                }
             }
             .navigationTitle("Dashboard")
             .navigationBarTitleDisplayMode(.inline)
@@ -117,6 +114,15 @@ struct DashboardView: View {
     }
 
     // MARK: - Record strip
+
+    @ViewBuilder
+    private var recordSection: some View {
+        if vm.liveRecord == nil && vm.isLoading {
+            LiveRecordSkeleton()
+        } else {
+            recordStrip
+        }
+    }
 
     @ViewBuilder
     private var recordStrip: some View {
@@ -208,15 +214,24 @@ struct DashboardView: View {
     @ViewBuilder
     private var picksList: some View {
         if let error = vm.errorMessage {
-            Text(error)
-                .font(Theme.Font.body(13))
-                .foregroundStyle(Color.lossRed)
-                .padding(.vertical, Theme.Spacing.sm)
-        } else if vm.topPicks.isEmpty && !vm.isLoading {
-            Text("No picks available yet today. Check back shortly.")
-                .font(Theme.Font.body(13))
-                .foregroundStyle(Color.brandTextSecondary)
-                .padding(.vertical, Theme.Spacing.xl)
+            ErrorStateCard(message: error) {
+                Task { await vm.refresh() }
+            }
+        } else if vm.isLoading && vm.todayResponse == nil {
+            // First load — show 3 skeleton cards shaped like PickCard so the
+            // layout doesn't jump when the real picks arrive.
+            VStack(spacing: Theme.Spacing.md) {
+                PickCardSkeleton()
+                PickCardSkeleton()
+                PickCardSkeleton()
+            }
+        } else if vm.topPicks.isEmpty {
+            EmptyStateView(
+                headline: "No picks today",
+                message: "Today's slate hasn't produced any value bets yet. Pull to refresh or check back closer to first pitch.",
+                actionTitle: "Refresh",
+                action: { Task { await vm.refresh() } }
+            )
         } else {
             VStack(spacing: Theme.Spacing.md) {
                 ForEach(vm.topPicks) { pick in

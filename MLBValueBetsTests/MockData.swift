@@ -193,6 +193,19 @@ extension PicksResponse {
         totalBets5Pct: 3,
         gamesToday: 12
     )
+
+    /// Empty response — no picks today. Used by the empty-state snapshot
+    /// tests on DashboardView and PicksListView.
+    static let mockEmpty = PicksResponse(
+        date: "2026-04-09",
+        generatedAt: "2026-04-09T10:30:00Z",
+        valueBets: [],
+        tier: "free",
+        totalBets: 0,
+        totalBetsAll: 0,
+        totalBets5Pct: 0,
+        gamesToday: 0
+    )
 }
 
 // MARK: - UserProfile fixtures for SettingsView + tier badges
