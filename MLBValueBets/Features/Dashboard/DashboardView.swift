@@ -37,6 +37,9 @@ struct DashboardView: View {
                         if vm.todayResponse != nil && !vm.topPicks.isEmpty {
                             viewAllButton
                         }
+                        if vm.todayResponse?.tier == "free" || !(auth.currentUser?.isPro ?? false) {
+                            upgradeBanner
+                        }
                     }
                     .padding(.horizontal, Theme.Spacing.lg)
                     .padding(.top, Theme.Spacing.sm)
@@ -263,6 +266,36 @@ struct DashboardView: View {
     }
 
     // MARK: - CTA
+
+    private var upgradeBanner: some View {
+        Link(destination: Config.upgradeURL) {
+            VStack(spacing: Theme.Spacing.sm) {
+                HStack {
+                    Image(systemName: "lock.open.fill")
+                        .font(.system(size: 14, weight: .bold))
+                    Text("UNLOCK ALL PICKS")
+                        .font(Theme.Font.heading(13, weight: .bold))
+                        .tracking(1.5)
+                    Spacer()
+                    Image(systemName: "arrow.up.right")
+                        .font(.system(size: 12, weight: .bold))
+                }
+                Text("Get every pick, every market, every day with Pro")
+                    .font(Theme.Font.body(12))
+                    .foregroundStyle(Color.brandAmber.opacity(0.70))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .foregroundStyle(Color.brandAmber)
+            .padding(Theme.Spacing.lg)
+            .background(Color.brandAmber.opacity(0.08))
+            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.md))
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.Radius.md)
+                    .stroke(Color.brandAmber.opacity(0.30), lineWidth: 1)
+            )
+            .shadow(color: Color.brandAmber.opacity(0.10), radius: 12, x: 0, y: 0)
+        }
+    }
 
     private var viewAllButton: some View {
         NavigationLink {

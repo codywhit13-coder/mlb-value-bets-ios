@@ -2,8 +2,8 @@
 //  SettingsView.swift
 //  MLBValueBets
 //
-//  App Store Reader App compliant — NO tappable "Upgrade" or payment links.
-//  Users manage their subscription on mlbvaluebets.com.
+//  Subscriptions are managed on mlbvaluebets.com — upgrade and account
+//  management buttons open the website in Safari.
 //
 
 import SwiftUI
@@ -43,14 +43,33 @@ struct SettingsView: View {
                 .listRowSeparatorTint(Color.brandBorder)
 
                 Section {
-                    Text("To change your plan, add a payment method, or cancel, please sign in to your account at mlbvaluebets.com on a web browser.")
-                        .font(Theme.Font.body(12))
-                        .foregroundStyle(Color.brandTextSecondary)
-                        .padding(.vertical, Theme.Spacing.xs)
+                    if auth.currentUser?.isPro != true {
+                        Link(destination: Config.upgradeURL) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("UPGRADE TO PRO")
+                                        .font(Theme.Font.heading(13, weight: .bold))
+                                        .tracking(1.5)
+                                        .foregroundStyle(Color.brandAmber)
+                                    Text("Unlock every pick, every day")
+                                        .font(Theme.Font.body(12))
+                                        .foregroundStyle(Color.brandTextSecondary)
+                                }
+                                Spacer()
+                                Image(systemName: "arrow.up.right")
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundStyle(Color.brandAmber)
+                            }
+                        }
+                    }
+                    Link(destination: Config.accountURL) {
+                        legalLink("MANAGE ACCOUNT")
+                    }
                 } header: {
-                    sectionHeader("MANAGE SUBSCRIPTION")
+                    sectionHeader("SUBSCRIPTION")
                 }
                 .listRowBackground(Color.brandSurface)
+                .listRowSeparatorTint(Color.brandBorder)
 
                 Section {
                     HStack {

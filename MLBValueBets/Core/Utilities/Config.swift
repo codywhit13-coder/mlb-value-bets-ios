@@ -25,6 +25,8 @@ enum Config {
     static let apiBaseURL = URL(string: "https://mlb-betting-agent-e4vs.onrender.com")!
 
     // MARK: - App metadata
+    static let upgradeURL = URL(string: "https://mlbvaluebets.com/pricing")!
+    static let accountURL = URL(string: "https://mlbvaluebets.com/account")!
     static let supportURL = URL(string: "https://mlbvaluebets.com/support")!
     static let privacyURL = URL(string: "https://mlbvaluebets.com/privacy")!
     static let termsURL = URL(string: "https://mlbvaluebets.com/terms")!

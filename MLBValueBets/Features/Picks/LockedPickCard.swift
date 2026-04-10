@@ -3,14 +3,14 @@
 //  MLBValueBets
 //
 //  Free-tier locked pick. Shows game + market but blurs the pick details.
-//  NOTE: No tappable upgrade link (App Store Reader App rule).
+//  Tapping "UPGRADE" opens the pricing page on mlbvaluebets.com.
 //
 
 import SwiftUI
 
 struct LockedPickCard: View {
     let pick: Pick
-    @State private var showInfo: Bool = false
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.md) {
@@ -54,17 +54,20 @@ struct LockedPickCard: View {
                         .tracking(2)
                         .foregroundStyle(Color.brandTextPrimary)
                     Button {
-                        showInfo = true
+                        HapticService.medium()
+                        openURL(Config.upgradeURL)
                     } label: {
-                        Text("HOW TO UNLOCK")
-                            .font(Theme.Font.overline(9))
+                        Text("UPGRADE")
+                            .font(Theme.Font.overline(10))
                             .tracking(1.5)
-                            .foregroundStyle(Color.brandTextSecondary)
-                            .padding(.horizontal, Theme.Spacing.md)
-                            .padding(.vertical, 4)
+                            .foregroundStyle(Color.brandAmber)
+                            .padding(.horizontal, Theme.Spacing.lg)
+                            .padding(.vertical, 6)
+                            .background(Color.brandAmber.opacity(0.12))
                             .overlay(
-                                Capsule().stroke(Color.brandBorder, lineWidth: 0.5)
+                                Capsule().stroke(Color.brandAmber.opacity(0.40), lineWidth: 0.5)
                             )
+                            .clipShape(Capsule())
                     }
                 }
                 .padding(.vertical, Theme.Spacing.md)
@@ -78,10 +81,5 @@ struct LockedPickCard: View {
             RoundedRectangle(cornerRadius: Theme.Radius.lg)
                 .stroke(Color.brandBorder, lineWidth: 1)
         )
-        .alert("Unlock More Picks", isPresented: $showInfo) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("Full access to every pick, every day is available through your account on mlbvaluebets.com.")
-        }
     }
 }
