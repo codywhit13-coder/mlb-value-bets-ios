@@ -95,6 +95,34 @@ extension Pick {
         modelTotal: nil
     )
 
+    /// Second moneyline pick for free-tier dashboard (2 ML picks visible).
+    static let mockMLSecond = Pick(
+        game: "Houston Astros @ Texas Rangers",
+        market: "moneyline",
+        side: "Houston Astros",
+        modelProb: 0.571,
+        impliedProb: 0.503,
+        edgePct: 6.8,
+        fairOdds: -133,
+        bookOdds: -101,
+        kellyFraction: 0.022,
+        lineMove: 4,
+        sharpSignal: true,
+        crossBookSpread: 7.0,
+        pinnacleEdge: 1.0,
+        pinnacleConfirms: false,
+        confidence: "medium",
+        book: "BetMGM",
+        outcome: nil,
+        locked: false,
+        valueBet: false,
+        gameTime: "2026-04-10T00:05:00Z",
+        closingOdds: nil,
+        clvPct: nil,
+        evPct: 3.1,
+        modelTotal: nil
+    )
+
     /// Free-tier locked pick. Detail fields are redacted/nil by the backend.
     static let mockLocked = Pick(
         game: "Philadelphia Phillies @ Atlanta Braves",
@@ -141,19 +169,20 @@ extension LivePerformance {
 
 extension PicksResponse {
 
-    /// Free-tier response — 3 visible picks (2 unlocked + 1 locked) out of 8
-    /// total picks behind the paywall. Exercises the DashboardView tier badge,
-    /// hidden count, and the mixed locked/unlocked list layout.
+    /// Free-tier response — 4 picks from backend (2 ML unlocked + 1 total + 1 locked).
+    /// Dashboard filters to top 2 ML picks only. Exercises the DashboardView
+    /// tier badge, hidden count, and the free-tier moneyline-only restriction.
     static let mockFree = PicksResponse(
         date: "2026-04-09",
         generatedAt: "2026-04-09T10:30:00Z",
         valueBets: [
-            .mockHighEdge,
-            .mockMediumEdge,
-            .mockLocked
+            .mockHighEdge,     // ML — shown on free dashboard
+            .mockMLSecond,     // ML — shown on free dashboard
+            .mockMediumEdge,   // Total — hidden on free dashboard
+            .mockLocked        // Locked — hidden on free dashboard
         ],
         tier: "free",
-        totalBets: 3,
+        totalBets: 4,
         totalBetsAll: 8,
         totalBets5Pct: 2,
         gamesToday: 12

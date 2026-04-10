@@ -21,9 +21,16 @@ final class DashboardViewModel {
     // MARK: - Derived
 
     var topPicks: [Pick] {
-        guard let bets = todayResponse?.valueBets else { return [] }
-        // Show first 3 non-locked picks on the dashboard
-        return Array(bets.prefix(3))
+        guard let resp = todayResponse else { return [] }
+        let bets = resp.valueBets
+
+        if resp.tier == "pro" {
+            // Pro: show first 3 picks (any market)
+            return Array(bets.prefix(3))
+        } else {
+            // Free: only top 2 moneyline picks
+            return Array(bets.filter { $0.market == "moneyline" }.prefix(2))
+        }
     }
 
     var valueBetCount: Int {
