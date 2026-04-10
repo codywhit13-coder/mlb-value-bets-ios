@@ -28,9 +28,12 @@ final class ViewSnapshotTests: XCTestCase {
         // `Font.custom(...)` lookup runs. Idempotent.
         FontLoader.registerCustomFonts()
 
-        // Force consistent rendering across local + CI runs.
-        // If you want to regenerate all baselines, set this to .all temporarily.
-        // SnapshotTesting.isRecording = true
+        // TEMPORARY: regenerate baselines in CI after the design system
+        // overhaul. With this on, every test "fails" but writes the new PNG
+        // to MLBValueBetsTests/__Snapshots__/, which the workflow's
+        // "Upload snapshot PNGs" step then bundles into the artifact. We
+        // download that, commit the PNGs, and flip this back to false.
+        isRecording = true
     }
 
     // MARK: - PickCard
