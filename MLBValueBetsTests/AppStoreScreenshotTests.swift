@@ -149,21 +149,4 @@ final class AppStoreScreenshotTests: XCTestCase {
         )
     }
 
-    // MARK: - 6. Share Card
-
-    func test_screenshot_06_shareCard() {
-        let view = SharePickView(pick: .mockHighEdge)
-            .padding(20)
-            .frame(width: 400)
-            .background(Color.brandBackground)
-            .preferredColorScheme(.dark)
-
-        assertSnapshot(
-            of: view,
-            as: .image(
-                perceptualPrecision: 0.95,
-                layout: .sizeThatFits
-            )
-        )
-    }
 }

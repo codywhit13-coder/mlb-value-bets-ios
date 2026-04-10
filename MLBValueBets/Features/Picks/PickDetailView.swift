@@ -42,17 +42,7 @@ struct PickDetailView: View {
         }
         .navigationTitle("Pick Details")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    HapticService.medium()
-                    SharePickService.share(pick)
-                } label: {
-                    Image(systemName: "square.and.arrow.up")
-                        .foregroundStyle(Color.brandTextPrimary)
-                }
-            }
-        }
+        // Share disabled — picks are paid content and should not be redistributed.
     }
 
     // MARK: - Hero
