@@ -507,4 +507,21 @@ final class ViewSnapshotTests: XCTestCase {
             )
         )
     }
+
+    // MARK: - SharePickView
+
+    func test_SharePickView_highEdge() {
+        let view = SharePickView(pick: .mockHighEdge)
+            .padding(16)
+            .background(Color.brandBackground)
+            .preferredColorScheme(.dark)
+
+        assertSnapshot(
+            of: view,
+            as: .image(
+                perceptualPrecision: 0.95,
+                layout: .sizeThatFits
+            )
+        )
+    }
 }

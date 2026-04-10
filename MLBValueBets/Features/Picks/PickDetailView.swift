@@ -42,6 +42,16 @@ struct PickDetailView: View {
         }
         .navigationTitle("Pick Details")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    SharePickService.share(pick)
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
+                        .foregroundStyle(Color.brandTextPrimary)
+                }
+            }
+        }
     }
 
     // MARK: - Hero
