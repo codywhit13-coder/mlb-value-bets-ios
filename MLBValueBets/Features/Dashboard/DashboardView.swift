@@ -133,7 +133,7 @@ struct DashboardView: View {
                     Circle()
                         .fill(Color.brandBlue)
                         .frame(width: 6, height: 6)
-                    Text("LIVE RECORD")
+                    Text("2026 LIVE SEASON")
                         .font(Theme.Font.overline(10))
                         .tracking(2)
                         .foregroundStyle(Color.brandTextSecondary)
@@ -146,9 +146,9 @@ struct DashboardView: View {
                     )
                     Spacer()
                     metric(
-                        value: live.unitsProfit.map { String(format: "%+.1f", $0) } ?? "—",
-                        label: "UNITS",
-                        color: (live.unitsProfit ?? 0) >= 0 ? .winGreen : .lossRed
+                        value: String(format: "%.1f%%", live.winRate * 100),
+                        label: "WIN %",
+                        color: live.winRate >= 0.52 ? .winGreen : .brandTextPrimary
                     )
                     Spacer()
                     metric(

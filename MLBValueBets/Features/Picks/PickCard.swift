@@ -153,11 +153,7 @@ struct PickCard: View {
 
     private var statsStrip: some View {
         HStack(spacing: 0) {
-            stat(
-                value: pick.edgePct.map { String(format: "+%.1f%%", $0) } ?? "—",
-                label: "EDGE",
-                color: .edgeColor(for: pick.confidenceTier)
-            )
+            edgeStat
             divider
             stat(
                 value: pick.evPct.map { String(format: "+%.1f%%", $0) } ?? "—",
@@ -169,6 +165,25 @@ struct PickCard: View {
                 label: "KELLY"
             )
         }
+    }
+
+    /// EDGE stat with confidence-colored background tint to make the
+    /// tier visually obvious (blue=high, amber=medium, dim=low).
+    private var edgeStat: some View {
+        let tierColor = Color.edgeColor(for: pick.confidenceTier)
+        return VStack(spacing: 4) {
+            Text(pick.edgePct.map { String(format: "+%.1f%%", $0) } ?? "—")
+                .font(Theme.Font.data(15, weight: .semibold))
+                .foregroundStyle(tierColor)
+            Text("EDGE")
+                .font(Theme.Font.overline(9))
+                .tracking(1.5)
+                .foregroundStyle(tierColor.opacity(0.6))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 4)
+        .background(tierColor.opacity(0.10))
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.sm))
     }
 
     private var divider: some View {
