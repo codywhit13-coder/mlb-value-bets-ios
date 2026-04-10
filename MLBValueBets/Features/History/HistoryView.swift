@@ -114,13 +114,14 @@ struct HistoryView: View {
                     daySectionHeader(section)
 
                     VStack(spacing: Theme.Spacing.md) {
-                        ForEach(section.picks) { pick in
+                        ForEach(Array(section.picks.enumerated()), id: \.element.id) { index, pick in
                             NavigationLink {
                                 PickDetailView(pick: pick)
                             } label: {
                                 PickCard(pick: pick)
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.card)
+                            .staggeredAppearance(index: index)
                         }
                     }
                 }

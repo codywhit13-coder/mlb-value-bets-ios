@@ -136,9 +136,7 @@ struct DashboardView: View {
             VStack(alignment: .leading, spacing: Theme.Spacing.md) {
                 HStack(spacing: Theme.Spacing.sm) {
                     // Pulse dot — small live indicator
-                    Circle()
-                        .fill(Color.brandBlue)
-                        .frame(width: 6, height: 6)
+                    PulseDot(color: .brandBlue)
                     Text("2026 LIVE SEASON")
                         .font(Theme.Font.overline(10))
                         .tracking(2)
@@ -240,16 +238,18 @@ struct DashboardView: View {
             )
         } else {
             VStack(spacing: Theme.Spacing.md) {
-                ForEach(vm.topPicks) { pick in
+                ForEach(Array(vm.topPicks.enumerated()), id: \.element.id) { index, pick in
                     if pick.locked {
                         LockedPickCard(pick: pick)
+                            .staggeredAppearance(index: index)
                     } else {
                         NavigationLink {
                             PickDetailView(pick: pick)
                         } label: {
                             PickCard(pick: pick)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.card)
+                        .staggeredAppearance(index: index)
                     }
                 }
             }

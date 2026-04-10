@@ -74,19 +74,22 @@ struct PicksListView: View {
             .padding(.top, Theme.Spacing.lg)
         } else {
             LazyVStack(spacing: Theme.Spacing.md) {
-                ForEach(vm.filteredPicks) { pick in
+                ForEach(Array(vm.filteredPicks.enumerated()), id: \.element.id) { index, pick in
                     if pick.locked {
                         LockedPickCard(pick: pick)
+                            .staggeredAppearance(index: index)
                     } else {
                         NavigationLink {
                             PickDetailView(pick: pick)
                         } label: {
                             PickCard(pick: pick)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.card)
+                        .staggeredAppearance(index: index)
                     }
                 }
             }
+            .id(vm.selectedMarket)
         }
     }
 
