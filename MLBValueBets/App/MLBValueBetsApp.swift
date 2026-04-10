@@ -32,10 +32,16 @@ struct MLBValueBetsApp: App {
 
 private struct RootView: View {
     @Environment(AuthViewModel.self) private var auth
+    @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
 
     var body: some View {
         ZStack {
-            if auth.isSignedIn {
+            if !hasSeenOnboarding {
+                OnboardingView {
+                    withAnimation { hasSeenOnboarding = true }
+                }
+                .transition(.opacity)
+            } else if auth.isSignedIn {
                 MainTabView()
             } else {
                 LoginView(vm: auth)
@@ -43,6 +49,7 @@ private struct RootView: View {
             }
         }
         .animation(.easeInOut(duration: 0.25), value: auth.isSignedIn)
+        .animation(.easeInOut(duration: 0.25), value: hasSeenOnboarding)
     }
 }
 
