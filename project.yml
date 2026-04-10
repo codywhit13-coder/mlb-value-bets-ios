@@ -64,6 +64,8 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: MLB Value Bets
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.sports
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UILaunchScreen_BackgroundColor: LaunchBackground
+        INFOPLIST_KEY_UILaunchScreen_ImageName: LaunchLogo
         INFOPLIST_KEY_UIStatusBarStyle: UIStatusBarStyleLightContent
         INFOPLIST_KEY_UIUserInterfaceStyle: Dark
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait"
