@@ -19,22 +19,16 @@ Policy last updated: March 29, 2026
 | Cookies | ✅ | Essential auth cookies only, no advertising/tracking cookies |
 | No third-party tracking | ✅ | No analytics SDKs, no IDFA, no ATT required |
 
-## Gaps to Fix Before Submission
+## Gaps — RESOLVED (April 10, 2026)
 
-### 1. Mobile App / iOS Not Mentioned
-**Issue**: Policy only references "the Service" generically — reads as web-only.
-**Fix**: Add a paragraph stating the policy applies to the iOS app as well as the website. Example: "This Privacy Policy applies to the mlbvaluebets.com website and the Value Bets iOS application."
+### 1. ✅ Mobile App / iOS Now Mentioned
+**Fixed**: Added intro paragraph: "This Privacy Policy applies to the mlbvaluebets.com website and the Value Bets iOS application (collectively, 'the Service')."
 
-### 2. On-Device Storage Not Documented
-**Issue**: No mention of Keychain, UserDefaults, or local caching.
-**Fix**: Add a section covering:
-- **Keychain**: Auth session tokens stored securely via Supabase iOS SDK
-- **UserDefaults**: Cached picks data for offline viewing (JSON, no PII)
-- **@AppStorage**: User preference flags (e.g., onboarding completion)
+### 2. ✅ On-Device Storage Now Documented
+**Fixed**: Added Section 6 "On-Device Storage (iOS App)" covering Keychain (session tokens), Local cache (UserDefaults, no PII), and Preferences (onboarding, notifications). Notes that all on-device data is removed on sign-out.
 
-### 3. Apple App Privacy Labels Not Referenced
-**Issue**: Apple requires a privacy "nutrition label" in App Store Connect.
-**Fix**: No policy text change needed — but we must declare correctly in App Store Connect:
+### 3. Apple App Privacy Labels (App Store Connect)
+**Status**: No policy text change needed — must declare correctly in App Store Connect when creating the listing:
 
 | Data Type | Collected | Linked to User | Tracking |
 |---|---|---|---|
@@ -45,8 +39,6 @@ Policy last updated: March 29, 2026
 | Crash Data | No | — | — |
 | Advertising Data | No | — | — |
 
-## Action Items
+## Remaining Action Item
 
-1. **Web team**: Update privacy policy text to mention iOS app and on-device storage (Keychain + UserDefaults)
-2. **App Store Connect**: Fill in App Privacy section using the table above when creating the app listing
-3. **No code changes needed** — the iOS app itself is compliant; only the policy text needs updating
+1. **App Store Connect**: Fill in App Privacy section using the table above when creating the app listing
