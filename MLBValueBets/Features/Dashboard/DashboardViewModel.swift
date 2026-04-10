@@ -16,6 +16,7 @@ final class DashboardViewModel {
     var todayResponse: PicksResponse? = nil
     var liveRecord: LivePerformance? = nil
     var lastCachedAt: Date? = nil
+    var isSessionExpired: Bool = false
 
     // MARK: - Derived
 
@@ -57,6 +58,10 @@ final class DashboardViewModel {
             self.lastCachedAt = nil  // data is fresh, hide stale banner
             PicksCacheService.save(fresh, forKey: PicksCacheService.todayPicksKey)
         } catch {
+            if let apiErr = error as? APIError, apiErr.isSessionExpired {
+                self.isSessionExpired = true
+                return
+            }
             // If we have cached data, suppress the error (stale banner shows instead)
             if self.todayResponse == nil {
                 if let apiErr = error as? APIError {

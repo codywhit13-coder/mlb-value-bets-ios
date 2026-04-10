@@ -16,6 +16,8 @@ enum APIError: LocalizedError, Equatable {
     case badResponse                // non-HTTP response
     case decoding(String)           // JSON decode failure with debug message
     case transport(String)          // URLSession-level failure (offline, DNS, etc.)
+    case timeout                    // request timed out
+    case offline                    // no internet connection
     case unknown
 
     var errorDescription: String? {
@@ -38,8 +40,30 @@ enum APIError: LocalizedError, Equatable {
             return "Could not read server response. (\(detail))"
         case .transport(let detail):
             return "Network error: \(detail)"
+        case .timeout:
+            return "The request timed out. Please check your connection and try again."
+        case .offline:
+            return "You appear to be offline. Please check your internet connection."
         case .unknown:
             return "Something went wrong. Please try again."
+        }
+    }
+
+    /// True if the error indicates the user's session is expired and they
+    /// need to sign in again. Views can observe this to auto-redirect.
+    var isSessionExpired: Bool {
+        switch self {
+        case .unauthorized, .notAuthenticated: return true
+        default: return false
+        }
+    }
+
+    /// SF Symbol name for the error, used by ErrorStateCard.
+    var iconName: String {
+        switch self {
+        case .offline:  return "wifi.slash"
+        case .timeout:  return "clock.badge.exclamationmark"
+        default:        return "exclamationmark.triangle.fill"
         }
     }
 }

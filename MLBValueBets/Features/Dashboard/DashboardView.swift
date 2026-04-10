@@ -62,6 +62,9 @@ struct DashboardView: View {
                     await vm.load()
                 }
             }
+            .onChange(of: vm.isSessionExpired) { _, expired in
+                if expired { Task { await auth.signOut() } }
+            }
         }
     }
 

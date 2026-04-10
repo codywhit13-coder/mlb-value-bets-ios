@@ -73,6 +73,7 @@ actor APIClient {
 
         var req = URLRequest(url: url)
         req.httpMethod = method
+        req.timeoutInterval = 15
         req.setValue("application/json", forHTTPHeaderField: "Accept")
         if body != nil {
             req.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -90,6 +91,23 @@ actor APIClient {
         let response: URLResponse
         do {
             (data, response) = try await session.data(for: req)
+        } catch let urlError as URLError {
+            switch urlError.code {
+            case .timedOut:
+                // Retry once on timeout before giving up
+                if !isRetry {
+                    try? await Task.sleep(nanoseconds: 2_000_000_000) // 2s delay
+                    return try await request(
+                        path: path, method: method, body: body,
+                        authenticated: authenticated, isRetry: true
+                    )
+                }
+                throw APIError.timeout
+            case .notConnectedToInternet, .networkConnectionLost, .dataNotAllowed:
+                throw APIError.offline
+            default:
+                throw APIError.transport(urlError.localizedDescription)
+            }
         } catch {
             throw APIError.transport(error.localizedDescription)
         }

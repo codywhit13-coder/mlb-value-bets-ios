@@ -16,6 +16,7 @@ final class PicksViewModel {
     var response: PicksResponse? = nil
     var selectedMarket: MarketFilter = .all
     var lastCachedAt: Date? = nil
+    var isSessionExpired: Bool = false
 
     // MARK: - Filter
 
@@ -60,6 +61,10 @@ final class PicksViewModel {
             self.lastCachedAt = nil
             PicksCacheService.save(fresh, forKey: PicksCacheService.todayPicksKey)
         } catch {
+            if let apiErr = error as? APIError, apiErr.isSessionExpired {
+                self.isSessionExpired = true
+                return
+            }
             if self.response == nil {
                 if let apiErr = error as? APIError {
                     self.errorMessage = apiErr.errorDescription

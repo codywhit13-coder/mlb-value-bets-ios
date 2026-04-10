@@ -307,6 +307,7 @@ struct StaleBanner: View {
 /// can fail — the message string comes straight from `APIError`.
 struct ErrorStateCard: View {
     let message: String
+    var icon: String = "exclamationmark.triangle.fill"
     var actionTitle: String = "TRY AGAIN"
     var action: (() -> Void)? = nil
 
@@ -314,7 +315,7 @@ struct ErrorStateCard: View {
         VStack(alignment: .leading, spacing: Theme.Spacing.md) {
 
             HStack(spacing: Theme.Spacing.sm) {
-                Image(systemName: "exclamationmark.triangle.fill")
+                Image(systemName: icon)
                     .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(Color.lossRed)
                 Text("COULDN'T LOAD PICKS")

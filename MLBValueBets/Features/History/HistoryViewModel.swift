@@ -18,6 +18,7 @@ final class HistoryViewModel {
     var errorMessage: String? = nil
     var allPicks: [Pick] = []
     var lastCachedAt: Date? = nil
+    var isSessionExpired: Bool = false
 
     // MARK: - Grouped by date
 
@@ -84,6 +85,10 @@ final class HistoryViewModel {
             self.lastCachedAt = nil
             PicksCacheService.save(fresh, forKey: PicksCacheService.historyKey)
         } catch {
+            if let apiErr = error as? APIError, apiErr.isSessionExpired {
+                self.isSessionExpired = true
+                return
+            }
             if self.allPicks.isEmpty {
                 if let apiErr = error as? APIError {
                     self.errorMessage = apiErr.errorDescription
