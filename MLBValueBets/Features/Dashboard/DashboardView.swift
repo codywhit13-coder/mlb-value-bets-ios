@@ -28,6 +28,9 @@ struct DashboardView: View {
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
+                        if let cachedAt = vm.lastCachedAt {
+                            StaleBanner(cachedAt: cachedAt)
+                        }
                         hero
                         recordSection
                         topPicksSection

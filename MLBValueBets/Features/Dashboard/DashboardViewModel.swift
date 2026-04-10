@@ -15,6 +15,7 @@ final class DashboardViewModel {
     var errorMessage: String? = nil
     var todayResponse: PicksResponse? = nil
     var liveRecord: LivePerformance? = nil
+    var lastCachedAt: Date? = nil
 
     // MARK: - Derived
 
@@ -31,23 +32,46 @@ final class DashboardViewModel {
     // MARK: - Actions
 
     func load() async {
+        // 1. Show cached data immediately while the network request runs
+        if todayResponse == nil,
+           let cached = PicksCacheService.load(PicksResponse.self, forKey: PicksCacheService.todayPicksKey) {
+            self.todayResponse = cached.data
+            self.lastCachedAt = cached.cachedAt
+        }
+        if liveRecord == nil,
+           let cached = PicksCacheService.load(LivePerformance.self, forKey: PicksCacheService.liveRecordKey) {
+            self.liveRecord = cached.data
+        }
+
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
 
+        // 2. Fetch fresh data from network
         async let picksTask = PicksService.shared.fetchToday()
         async let liveTask  = PerformanceService.shared.fetchLive()
 
         do {
-            self.todayResponse = try await picksTask
-        } catch let err as APIError {
-            self.errorMessage = err.errorDescription
+            let fresh = try await picksTask
+            self.todayResponse = fresh
+            self.lastCachedAt = nil  // data is fresh, hide stale banner
+            PicksCacheService.save(fresh, forKey: PicksCacheService.todayPicksKey)
         } catch {
-            self.errorMessage = error.localizedDescription
+            // If we have cached data, suppress the error (stale banner shows instead)
+            if self.todayResponse == nil {
+                if let apiErr = error as? APIError {
+                    self.errorMessage = apiErr.errorDescription
+                } else {
+                    self.errorMessage = error.localizedDescription
+                }
+            }
         }
 
         // Live record is non-fatal — show dashboard even if it fails
-        self.liveRecord = try? await liveTask
+        if let live = try? await liveTask {
+            self.liveRecord = live
+            PicksCacheService.save(live, forKey: PicksCacheService.liveRecordKey)
+        }
     }
 
     func refresh() async {

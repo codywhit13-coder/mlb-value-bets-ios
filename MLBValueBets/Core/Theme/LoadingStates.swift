@@ -270,6 +270,37 @@ struct EmptyStateView: View {
     }
 }
 
+// MARK: - StaleBanner
+
+/// Thin banner showing how old the cached data is. Appears above the
+/// content area when the last successful fetch was more than ~30 seconds
+/// ago (i.e. the data came from cache or a refresh failed silently).
+struct StaleBanner: View {
+    let cachedAt: Date
+
+    private static let formatter: RelativeDateTimeFormatter = {
+        let f = RelativeDateTimeFormatter()
+        f.unitsStyle = .abbreviated
+        return f
+    }()
+
+    var body: some View {
+        HStack(spacing: Theme.Spacing.sm) {
+            Image(systemName: "clock.arrow.circlepath")
+                .font(.system(size: 10, weight: .medium))
+            Text("Last updated \(Self.formatter.localizedString(for: cachedAt, relativeTo: Date()))")
+                .font(Theme.Font.overline(10))
+                .tracking(0.5)
+            Spacer()
+        }
+        .foregroundStyle(Color.brandTextMuted)
+        .padding(.horizontal, Theme.Spacing.lg)
+        .padding(.vertical, Theme.Spacing.sm)
+        .background(Color.brandSurfaceMid)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.sm))
+    }
+}
+
 // MARK: - ErrorStateCard
 
 /// Red-tinted error panel with a retry button. Used anywhere a request

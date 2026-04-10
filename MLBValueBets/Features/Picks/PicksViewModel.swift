@@ -15,6 +15,7 @@ final class PicksViewModel {
     var errorMessage: String? = nil
     var response: PicksResponse? = nil
     var selectedMarket: MarketFilter = .all
+    var lastCachedAt: Date? = nil
 
     // MARK: - Filter
 
@@ -42,16 +43,30 @@ final class PicksViewModel {
     // MARK: - Actions
 
     func load() async {
+        // Show cached data immediately while the network request runs
+        if response == nil,
+           let cached = PicksCacheService.load(PicksResponse.self, forKey: PicksCacheService.todayPicksKey) {
+            self.response = cached.data
+            self.lastCachedAt = cached.cachedAt
+        }
+
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
 
         do {
-            self.response = try await PicksService.shared.fetchToday()
-        } catch let err as APIError {
-            self.errorMessage = err.errorDescription
+            let fresh = try await PicksService.shared.fetchToday()
+            self.response = fresh
+            self.lastCachedAt = nil
+            PicksCacheService.save(fresh, forKey: PicksCacheService.todayPicksKey)
         } catch {
-            self.errorMessage = error.localizedDescription
+            if self.response == nil {
+                if let apiErr = error as? APIError {
+                    self.errorMessage = apiErr.errorDescription
+                } else {
+                    self.errorMessage = error.localizedDescription
+                }
+            }
         }
     }
 

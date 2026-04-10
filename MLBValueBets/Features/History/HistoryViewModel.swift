@@ -17,6 +17,7 @@ final class HistoryViewModel {
     var isLoading: Bool = false
     var errorMessage: String? = nil
     var allPicks: [Pick] = []
+    var lastCachedAt: Date? = nil
 
     // MARK: - Grouped by date
 
@@ -66,16 +67,30 @@ final class HistoryViewModel {
     // MARK: - Actions
 
     func load() async {
+        // Show cached data immediately while the network request runs
+        if allPicks.isEmpty,
+           let cached = PicksCacheService.load([Pick].self, forKey: PicksCacheService.historyKey) {
+            self.allPicks = cached.data
+            self.lastCachedAt = cached.cachedAt
+        }
+
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
 
         do {
-            self.allPicks = try await PicksService.shared.fetchHistory(days: 7)
-        } catch let err as APIError {
-            self.errorMessage = err.errorDescription
+            let fresh = try await PicksService.shared.fetchHistory(days: 7)
+            self.allPicks = fresh
+            self.lastCachedAt = nil
+            PicksCacheService.save(fresh, forKey: PicksCacheService.historyKey)
         } catch {
-            self.errorMessage = error.localizedDescription
+            if self.allPicks.isEmpty {
+                if let apiErr = error as? APIError {
+                    self.errorMessage = apiErr.errorDescription
+                } else {
+                    self.errorMessage = error.localizedDescription
+                }
+            }
         }
     }
 

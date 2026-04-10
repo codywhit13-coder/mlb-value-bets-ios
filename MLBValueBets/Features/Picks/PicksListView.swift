@@ -26,9 +26,15 @@ struct PicksListView: View {
 
             ScrollView {
                 VStack(spacing: Theme.Spacing.lg) {
+                    if let cachedAt = vm.lastCachedAt {
+                        StaleBanner(cachedAt: cachedAt)
+                            .padding(.horizontal, Theme.Spacing.lg)
+                            .padding(.top, Theme.Spacing.sm)
+                    }
+
                     filterBar
                         .padding(.horizontal, Theme.Spacing.lg)
-                        .padding(.top, Theme.Spacing.sm)
+                        .padding(.top, vm.lastCachedAt == nil ? Theme.Spacing.sm : 0)
 
                     content
                         .padding(.horizontal, Theme.Spacing.lg)

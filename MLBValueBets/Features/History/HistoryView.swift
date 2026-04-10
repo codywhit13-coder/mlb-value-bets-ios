@@ -29,6 +29,9 @@ struct HistoryView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
+                    if let cachedAt = vm.lastCachedAt {
+                        StaleBanner(cachedAt: cachedAt)
+                    }
                     summaryHeader
                     content
                 }

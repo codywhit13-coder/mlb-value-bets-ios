@@ -96,6 +96,7 @@ final class AuthViewModel {
         self.currentUser = nil
         self.email = ""
         self.password = ""
+        PicksCacheService.clearAll()
     }
 
     func sendPasswordReset() async {
