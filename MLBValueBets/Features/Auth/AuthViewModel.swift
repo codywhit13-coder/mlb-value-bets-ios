@@ -7,6 +7,7 @@
 
 import Foundation
 import Observation
+import UIKit
 
 @Observable
 @MainActor
@@ -54,10 +55,13 @@ final class AuthViewModel {
             try await AuthService.shared.signIn(email: email, password: password)
             await refreshSession()
             password = ""   // clear from memory after successful sign-in
+            HapticService.success()
         } catch let err as AuthError {
             errorMessage = err.errorDescription
+            HapticService.error()
         } catch {
             errorMessage = error.localizedDescription
+            HapticService.error()
         }
     }
 
@@ -77,10 +81,13 @@ final class AuthViewModel {
         do {
             try await AuthService.shared.signUp(email: email, password: password)
             await refreshSession()
+            HapticService.success()
         } catch let err as AuthError {
             errorMessage = err.errorDescription
+            HapticService.error()
         } catch {
             errorMessage = error.localizedDescription
+            HapticService.error()
         }
     }
 

@@ -97,6 +97,7 @@ struct OnboardingView: View {
             // Button: "NEXT" or "SIGN IN" on last page
             if currentPage == pages.count - 1 {
                 Button {
+                    HapticService.medium()
                     onComplete()
                 } label: {
                     HStack(spacing: Theme.Spacing.sm) {
@@ -115,6 +116,7 @@ struct OnboardingView: View {
                 .buttonStyle(.plain)
             } else {
                 Button {
+                    HapticService.light()
                     withAnimation { currentPage += 1 }
                 } label: {
                     HStack(spacing: Theme.Spacing.sm) {
@@ -138,6 +140,7 @@ struct OnboardingView: View {
             // Skip on non-last pages
             if currentPage < pages.count - 1 {
                 Button {
+                    HapticService.light()
                     onComplete()
                 } label: {
                     Text("SKIP")
