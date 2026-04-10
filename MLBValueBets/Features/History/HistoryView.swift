@@ -14,9 +14,11 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct HistoryView: View {
     @State private var vm: HistoryViewModel
+    @Namespace private var filterNamespace
 
     @MainActor
     init(vm: HistoryViewModel? = nil) {
@@ -33,6 +35,9 @@ struct HistoryView: View {
                         StaleBanner(cachedAt: cachedAt)
                     }
                     summaryHeader
+                    if !vm.allPicks.isEmpty {
+                        confidenceFilterBar
+                    }
                     content
                 }
                 .padding(.horizontal, Theme.Spacing.lg)
@@ -71,7 +76,7 @@ struct HistoryView: View {
                 .foregroundStyle(Color.brandTextPrimary)
 
             if !vm.allPicks.isEmpty {
-                Text("\(vm.totalRecord)  ·  \(vm.allPicks.count) PICKS")
+                Text("\(vm.totalRecord)  ·  \(vm.filteredPicks.count) PICKS")
                     .font(Theme.Font.overline(11))
                     .tracking(1.5)
                     .foregroundStyle(Color.brandTextSecondary)
@@ -100,6 +105,18 @@ struct HistoryView: View {
                 actionTitle: "Refresh",
                 action: { Task { await vm.refresh() } }
             )
+        } else if vm.filteredPicks.isEmpty {
+            EmptyStateView(
+                headline: "No \(vm.selectedConfidence.rawValue.lowercased()) confidence picks",
+                message: "No settled picks match the \(vm.selectedConfidence.subtitle) range. Try a different confidence tier.",
+                actionTitle: "Show High",
+                action: {
+                    withAnimation(Theme.Motion.spring) {
+                        vm.selectedConfidence = .high
+                    }
+                }
+            )
+            .padding(.top, Theme.Spacing.lg)
         } else {
             daySections
         }
@@ -128,6 +145,90 @@ struct HistoryView: View {
             }
         }
     }
+
+    // MARK: - Confidence filter
+
+    private var confidenceFilterBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: Theme.Spacing.sm) {
+                ForEach(HistoryViewModel.ConfidenceFilter.allCases) { filter in
+                    confidenceChip(filter)
+                }
+            }
+        }
+    }
+
+    private func confidenceChip(_ filter: HistoryViewModel.ConfidenceFilter) -> some View {
+        let isActive = vm.selectedConfidence == filter
+        let count = vm.count(for: filter)
+        return Button {
+            UISelectionFeedbackGenerator().selectionChanged()
+            withAnimation(Theme.Motion.spring) {
+                vm.selectedConfidence = filter
+            }
+        } label: {
+            VStack(spacing: 2) {
+                HStack(spacing: 6) {
+                    Text(filter.rawValue.uppercased())
+                        .font(Theme.Font.overline(11))
+                        .tracking(1.5)
+
+                    if count > 0 {
+                        Text("\(count)")
+                            .font(Theme.Font.data(10, weight: .bold))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 1)
+                            .background(
+                                isActive
+                                    ? Color.brandBlue.opacity(0.20)
+                                    : Color.white.opacity(0.07)
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                            .foregroundStyle(
+                                isActive
+                                    ? Color.brandBlue
+                                    : Color.brandTextMuted
+                            )
+                    }
+                }
+
+                Text(filter.subtitle)
+                    .font(Theme.Font.overline(8))
+                    .tracking(0.8)
+                    .foregroundStyle(
+                        isActive
+                            ? Color.brandBlue.opacity(0.70)
+                            : Color.brandTextMuted.opacity(0.6)
+                    )
+            }
+            .padding(.horizontal, Theme.Spacing.lg)
+            .padding(.vertical, Theme.Spacing.sm)
+            .foregroundStyle(isActive ? Color.white : Color.brandTextSecondary)
+            .background(
+                ZStack {
+                    Capsule()
+                        .fill(Color.brandSurface)
+                    if isActive {
+                        Capsule()
+                            .fill(Color.brandBlue)
+                            .matchedGeometryEffect(id: "confidencePill", in: filterNamespace)
+                            .shadow(color: Color.brandBlue.opacity(0.40), radius: 10, x: 0, y: 0)
+                    }
+                }
+            )
+            .overlay(
+                Capsule().stroke(
+                    isActive ? Color.brandBlue : Color.brandBorder,
+                    lineWidth: 0.5
+                )
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(filter.rawValue) confidence filter")
+        .accessibilityAddTraits(isActive ? .isSelected : [])
+    }
+
+    // MARK: - Day section header
 
     private func daySectionHeader(_ section: HistoryViewModel.DaySection) -> some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.xs) {

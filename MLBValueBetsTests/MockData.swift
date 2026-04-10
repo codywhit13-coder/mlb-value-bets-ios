@@ -267,6 +267,34 @@ extension Pick {
         modelTotal: nil
     )
 
+    /// High-confidence settled win for history filter testing.
+    static let mockSettledHighConf = Pick(
+        game: "Los Angeles Dodgers @ San Francisco Giants",
+        market: "moneyline",
+        side: "Los Angeles Dodgers",
+        modelProb: 0.648,
+        impliedProb: 0.535,
+        edgePct: 11.3,
+        fairOdds: -184,
+        bookOdds: -115,
+        kellyFraction: 0.038,
+        lineMove: 6,
+        sharpSignal: true,
+        crossBookSpread: 12.0,
+        pinnacleEdge: 2.1,
+        pinnacleConfirms: true,
+        confidence: "high",
+        book: "FanDuel",
+        outcome: "win",
+        locked: false,
+        valueBet: true,
+        gameTime: "2026-04-08T02:10:00Z",
+        closingOdds: -130,
+        clvPct: 4.5,
+        evPct: 5.8,
+        modelTotal: nil
+    )
+
     /// Second win on a different day for multi-day grouping.
     static let mockSettledWinDay2 = Pick(
         game: "Tampa Bay Rays @ Baltimore Orioles",
@@ -298,14 +326,15 @@ extension Pick {
 
 /// Mock history arrays for snapshot tests
 extension Array where Element == Pick {
-    /// Two days of settled picks: Apr 8 (2 picks) and Apr 7 (2 picks).
+    /// Three days of settled picks across all confidence tiers.
     static let mockHistory: [Pick] = [
-        // Day 1: April 8 — 1W 1L
-        .mockRunlineWin,     // gameTime 2026-04-08T20:10:00Z → win
-        .mockSettledLoss,    // gameTime 2026-04-08T23:10:00Z → loss
+        // Day 1: April 8 — 2W 1L (high + medium + low)
+        .mockSettledHighConf,  // 11.3% edge → high, win
+        .mockRunlineWin,       // 8.63% edge → medium, win
+        .mockSettledLoss,      // 5.4% edge  → low, loss
         // Day 2: April 7 — 1W 1P
-        .mockSettledWinDay2, // gameTime 2026-04-07T23:05:00Z → win
-        .mockSettledPush,    // gameTime 2026-04-07T01:40:00Z → push
+        .mockSettledWinDay2,   // 7.0% edge  → low, win
+        .mockSettledPush,      // 5.6% edge  → low, push
     ]
 }
 

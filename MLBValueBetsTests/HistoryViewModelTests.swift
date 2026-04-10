@@ -3,7 +3,7 @@
 //  MLBValueBetsTests
 //
 //  Unit tests for HistoryViewModel date grouping, section record display,
-//  and totalRecord formatting. Pure logic — no network, no simulator needed.
+//  totalRecord formatting, and confidence filtering.
 //
 
 import XCTest
@@ -19,15 +19,48 @@ final class HistoryViewModelTests: XCTestCase {
         vm = HistoryViewModel()
     }
 
-    // MARK: - sections grouping
+    // MARK: - Confidence filter
+
+    func test_filter_high_returnsOnlyHighEdge() {
+        vm.allPicks = .mockHistory
+        vm.selectedConfidence = .high
+        // Only mockSettledHighConf (11.3%) qualifies
+        XCTAssertEqual(vm.filteredPicks.count, 1)
+        XCTAssertEqual(vm.filteredPicks.first?.side, "Los Angeles Dodgers")
+    }
+
+    func test_filter_medium_returnsMediumEdge() {
+        vm.allPicks = .mockHistory
+        vm.selectedConfidence = .medium
+        // mockRunlineWin (8.63%) qualifies
+        XCTAssertEqual(vm.filteredPicks.count, 1)
+    }
+
+    func test_filter_low_returnsLowEdge() {
+        vm.allPicks = .mockHistory
+        vm.selectedConfidence = .low
+        // mockSettledLoss (5.4%), mockSettledWinDay2 (7.0%), mockSettledPush (5.6%)
+        XCTAssertEqual(vm.filteredPicks.count, 3)
+    }
+
+    func test_count_perFilter() {
+        vm.allPicks = .mockHistory
+        XCTAssertEqual(vm.count(for: .high), 1)
+        XCTAssertEqual(vm.count(for: .medium), 1)
+        XCTAssertEqual(vm.count(for: .low), 3)
+    }
+
+    // MARK: - sections grouping (uses low filter for multi-day spread)
 
     func test_sections_groupsByDate() {
-        vm.allPicks = .mockHistory  // 4 picks across 2 days
-        XCTAssertEqual(vm.sections.count, 2, "4 picks across 2 dates should produce 2 sections")
+        vm.allPicks = .mockHistory
+        vm.selectedConfidence = .low  // 3 picks across 2 days
+        XCTAssertEqual(vm.sections.count, 2, "3 low picks across 2 dates should produce 2 sections")
     }
 
     func test_sections_sortedMostRecentFirst() {
         vm.allPicks = .mockHistory
+        vm.selectedConfidence = .low
         let sections = vm.sections
         XCTAssertGreaterThan(
             sections[0].date, sections[1].date,
@@ -37,15 +70,15 @@ final class HistoryViewModelTests: XCTestCase {
 
     func test_sections_correctPickCountPerDay() {
         vm.allPicks = .mockHistory
-        let sections = vm.sections
+        vm.selectedConfidence = .low
 
-        // Apr 8: mockRunlineWin + mockSettledLoss = 2 picks
-        let apr8 = sections.first { $0.date == "2026-04-08" }
+        // Apr 8: mockSettledLoss (5.4%) = 1 low pick
+        let apr8 = sections(for: "2026-04-08")
         XCTAssertNotNil(apr8)
-        XCTAssertEqual(apr8?.picks.count, 2)
+        XCTAssertEqual(apr8?.picks.count, 1)
 
-        // Apr 7: mockSettledWinDay2 + mockSettledPush = 2 picks
-        let apr7 = sections.first { $0.date == "2026-04-07" }
+        // Apr 7: mockSettledWinDay2 (7.0%) + mockSettledPush (5.6%) = 2 low picks
+        let apr7 = sections(for: "2026-04-07")
         XCTAssertNotNil(apr7)
         XCTAssertEqual(apr7?.picks.count, 2)
     }
@@ -56,14 +89,13 @@ final class HistoryViewModelTests: XCTestCase {
     }
 
     func test_sections_nilGameTime_groupedAsUnknown() {
-        // A pick with nil gameTime should group under "Unknown"
         let noTimePick = Pick(
             game: "Team A @ Team B",
             market: "moneyline",
             side: "Team A",
             modelProb: 0.55,
             impliedProb: 0.50,
-            edgePct: 6.0,
+            edgePct: 12.0,
             fairOdds: -120,
             bookOdds: 105,
             kellyFraction: 0.02,
@@ -84,6 +116,7 @@ final class HistoryViewModelTests: XCTestCase {
             modelTotal: nil
         )
         vm.allPicks = [noTimePick]
+        vm.selectedConfidence = .high
         let sections = vm.sections
         XCTAssertEqual(sections.count, 1)
         XCTAssertEqual(sections[0].date, "Unknown")
@@ -93,28 +126,32 @@ final class HistoryViewModelTests: XCTestCase {
 
     func test_daySection_displayRecord_withPushes() {
         vm.allPicks = .mockHistory
-        // Apr 7 has 1W 0L 1P
-        let apr7 = vm.sections.first { $0.date == "2026-04-07" }
+        vm.selectedConfidence = .low
+        // Apr 7 has 1W 0L 1P (low picks only)
+        let apr7 = sections(for: "2026-04-07")
         XCTAssertNotNil(apr7)
         XCTAssertEqual(apr7?.displayRecord, "1W 0L 1P")
     }
 
     func test_daySection_displayRecord_noPushes() {
         vm.allPicks = .mockHistory
-        // Apr 8 has 1W 1L (no pushes)
-        let apr8 = vm.sections.first { $0.date == "2026-04-08" }
+        vm.selectedConfidence = .low
+        // Apr 8 has 0W 1L (low picks only — just the loss)
+        let apr8 = sections(for: "2026-04-08")
         XCTAssertNotNil(apr8)
-        XCTAssertEqual(apr8?.displayRecord, "1W 1L")
+        XCTAssertEqual(apr8?.displayRecord, "0W 1L")
     }
 
     func test_daySection_winsLossesPushes_counts() {
         vm.allPicks = .mockHistory
-        let apr8 = vm.sections.first { $0.date == "2026-04-08" }!
-        XCTAssertEqual(apr8.wins, 1)
+        vm.selectedConfidence = .low
+
+        let apr8 = sections(for: "2026-04-08")!
+        XCTAssertEqual(apr8.wins, 0)
         XCTAssertEqual(apr8.losses, 1)
         XCTAssertEqual(apr8.pushes, 0)
 
-        let apr7 = vm.sections.first { $0.date == "2026-04-07" }!
+        let apr7 = sections(for: "2026-04-07")!
         XCTAssertEqual(apr7.wins, 1)
         XCTAssertEqual(apr7.losses, 0)
         XCTAssertEqual(apr7.pushes, 1)
@@ -122,15 +159,25 @@ final class HistoryViewModelTests: XCTestCase {
 
     // MARK: - totalRecord
 
-    func test_totalRecord_withPushes() {
-        vm.allPicks = .mockHistory  // 2W 1L 1P
-        XCTAssertEqual(vm.totalRecord, "2-1-1")
+    func test_totalRecord_highFilter() {
+        vm.allPicks = .mockHistory
+        vm.selectedConfidence = .high
+        // 1 high pick: mockSettledHighConf (win)
+        XCTAssertEqual(vm.totalRecord, "1-0")
+    }
+
+    func test_totalRecord_lowFilter_withPushes() {
+        vm.allPicks = .mockHistory
+        vm.selectedConfidence = .low
+        // 3 low picks: 1W 1L 1P
+        XCTAssertEqual(vm.totalRecord, "1-1-1")
     }
 
     func test_totalRecord_noPushes() {
-        // Only picks with win/loss outcomes, no pushes
         vm.allPicks = [.mockRunlineWin, .mockSettledLoss]
-        XCTAssertEqual(vm.totalRecord, "1-1")
+        vm.selectedConfidence = .medium
+        // mockRunlineWin (8.63%) is medium, mockSettledLoss (5.4%) is low
+        XCTAssertEqual(vm.totalRecord, "1-0")
     }
 
     func test_totalRecord_empty() {
@@ -138,8 +185,9 @@ final class HistoryViewModelTests: XCTestCase {
         XCTAssertEqual(vm.totalRecord, "0-0")
     }
 
-    func test_totalRecord_allWins() {
-        vm.allPicks = [.mockRunlineWin, .mockSettledWinDay2]
-        XCTAssertEqual(vm.totalRecord, "2-0")
+    // MARK: - Helpers
+
+    private func sections(for date: String) -> HistoryViewModel.DaySection? {
+        vm.sections.first { $0.date == date }
     }
 }

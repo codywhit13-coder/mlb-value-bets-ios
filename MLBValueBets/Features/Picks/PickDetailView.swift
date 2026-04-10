@@ -128,7 +128,7 @@ struct PickDetailView: View {
     private var stats: some View {
         let edge = pick.edgePct.map { String(format: "+%.2f%%", $0) } ?? "—"
         let ev   = pick.evPct.map { String(format: "+%.2f%%", $0) } ?? "—"
-        let fair = formatOdds(pick.fairOdds)
+        let implied = pick.impliedProb.map { String(format: "%.1f%%", $0 * 100) } ?? "—"
         let modelProb = String(format: "%.1f%%", pick.modelProb * 100)
 
         return VStack(alignment: .leading, spacing: Theme.Spacing.md) {
@@ -140,7 +140,7 @@ struct PickDetailView: View {
                     statTile(label: "EV", value: ev)
                 }
                 HStack(spacing: Theme.Spacing.sm) {
-                    statTile(label: "FAIR ODDS", value: fair)
+                    statTile(label: "IMPLIED %", value: implied)
                     statTile(label: "MODEL PROB", value: modelProb)
                 }
                 if pick.kellyFraction > 0 {

@@ -13,12 +13,44 @@ import Observation
 @MainActor
 final class HistoryViewModel {
 
+    // MARK: - Filters
+
+    enum ConfidenceFilter: String, CaseIterable, Identifiable {
+        case high   = "High"
+        case medium = "Medium"
+        case low    = "Low"
+
+        var id: String { rawValue }
+
+        var edgeRange: ClosedRange<Double> {
+            switch self {
+            case .high:   return 10...Double.infinity
+            case .medium: return 7.5...9.999999
+            case .low:    return 5...7.499999
+            }
+        }
+
+        var subtitle: String {
+            switch self {
+            case .high:   return "≥10% Edge"
+            case .medium: return "7.5–10%"
+            case .low:    return "5–7.5%"
+            }
+        }
+
+        func matches(_ pick: Pick) -> Bool {
+            let edge = pick.edgePct ?? 0
+            return edgeRange.contains(edge)
+        }
+    }
+
     // MARK: - State
     var isLoading: Bool = false
     var errorMessage: String? = nil
     var allPicks: [Pick] = []
     var lastCachedAt: Date? = nil
     var isSessionExpired: Bool = false
+    var selectedConfidence: ConfidenceFilter = .high
 
     // MARK: - Grouped by date
 
@@ -39,8 +71,13 @@ final class HistoryViewModel {
         }
     }
 
+    /// Picks filtered by the active confidence tier.
+    var filteredPicks: [Pick] {
+        allPicks.filter { selectedConfidence.matches($0) }
+    }
+
     var sections: [DaySection] {
-        let grouped = Dictionary(grouping: allPicks) { pick -> String in
+        let grouped = Dictionary(grouping: filteredPicks) { pick -> String in
             // Extract YYYY-MM-DD from gameTime, or "Unknown"
             guard let gt = pick.gameTime, gt.count >= 10 else { return "Unknown" }
             return String(gt.prefix(10))
@@ -58,11 +95,16 @@ final class HistoryViewModel {
     }
 
     var totalRecord: String {
-        let w = allPicks.filter { $0.isWin }.count
-        let l = allPicks.filter { $0.isLoss }.count
-        let p = allPicks.filter { $0.isPush }.count
+        let w = filteredPicks.filter { $0.isWin }.count
+        let l = filteredPicks.filter { $0.isLoss }.count
+        let p = filteredPicks.filter { $0.isPush }.count
         if p > 0 { return "\(w)-\(l)-\(p)" }
         return "\(w)-\(l)"
+    }
+
+    /// Count of settled picks per confidence tier (for badge display).
+    func count(for filter: ConfidenceFilter) -> Int {
+        allPicks.filter { filter.matches($0) && $0.isSettled }.count
     }
 
     // MARK: - Actions
