@@ -15,6 +15,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct PickCard: View {
     let pick: Pick
@@ -34,17 +35,24 @@ struct PickCard: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             // 3. Side + odds — the visual hero of the card
-            HStack(alignment: .firstTextBaseline) {
-                // Team abbreviation pill
+            HStack(alignment: .center) {
+                // Team logo (bundled PNG) or abbreviation pill fallback
                 if let team = TeamBrand.brand(for: pick.side) {
-                    Text(team.abbreviation)
-                        .font(Theme.Font.overline(9))
-                        .tracking(1)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
-                        .background(team.color)
-                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                    if let uiImage = UIImage(named: team.assetName) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 24, height: 24)
+                    } else {
+                        Text(team.abbreviation)
+                            .font(Theme.Font.overline(9))
+                            .tracking(1)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 3)
+                            .background(team.color)
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                    }
                 }
 
                 Text(pick.side)
@@ -117,10 +125,20 @@ struct PickCard: View {
                     .font(Theme.Font.overline(10))
                     .foregroundStyle(Color.brandTextMuted)
 
-                // Sportsbook icon + name in book brand color
-                Image(systemName: bookBrand.icon)
-                    .font(.system(size: 8, weight: .bold))
-                    .foregroundStyle(bookBrand.color)
+                // Sportsbook logo (bundled PNG) or SF Symbol fallback
+                if let asset = bookBrand.assetName,
+                   let uiImage = UIImage(named: asset) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 14, height: 14)
+                        .clipShape(RoundedRectangle(cornerRadius: 3))
+                } else {
+                    Image(systemName: bookBrand.icon)
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(bookBrand.color)
+                }
+
                 Text(pick.book!.uppercased())
                     .font(Theme.Font.overline(10))
                     .tracking(2)

@@ -30,54 +30,62 @@ enum MarketBrand {
 
 // MARK: - Sportsbook Brand Colors + SF Symbols
 
-/// Each major sportsbook gets its real brand color and a representative
-/// SF Symbol icon. These are the books the backend currently supports.
+/// Each major sportsbook gets its real brand color, an SF Symbol fallback,
+/// and the asset catalog name for the bundled logo PNG.
 struct BookBrand {
     let color: Color
-    let icon: String   // SF Symbol name
+    let icon: String        // SF Symbol fallback
+    let assetName: String?  // Asset catalog image name (nil = use SF Symbol)
 
     static func brand(for bookName: String?) -> BookBrand {
         guard let name = bookName?.lowercased() else {
-            return BookBrand(color: .brandTextSecondary, icon: "building.columns")
+            return BookBrand(color: .brandTextSecondary, icon: "building.columns", assetName: nil)
         }
         switch name {
         case let n where n.contains("fanduel"):
             return BookBrand(
-                color: Color(hex: 0x1493FF),  // FanDuel blue
-                icon: "diamond.fill"
+                color: Color(hex: 0x1493FF),
+                icon: "diamond.fill",
+                assetName: "fanduel"
             )
         case let n where n.contains("draftkings"):
             return BookBrand(
-                color: Color(hex: 0x53D769),  // DraftKings green
-                icon: "crown.fill"
+                color: Color(hex: 0x53D769),
+                icon: "crown.fill",
+                assetName: "draftkings"
             )
         case let n where n.contains("betmgm"):
             return BookBrand(
-                color: Color(hex: 0xBFA053),  // BetMGM gold
-                icon: "star.fill"
+                color: Color(hex: 0xBFA053),
+                icon: "star.fill",
+                assetName: "betmgm"
             )
         case let n where n.contains("caesars"):
             return BookBrand(
-                color: Color(hex: 0xC41230),  // Caesars red
-                icon: "laurel.leading"
+                color: Color(hex: 0xC41230),
+                icon: "laurel.leading",
+                assetName: "caesars"
             )
         case let n where n.contains("pinnacle"):
             return BookBrand(
-                color: Color(hex: 0x2D5F9A),  // Pinnacle blue
-                icon: "triangle.fill"
+                color: Color(hex: 0x2D5F9A),
+                icon: "triangle.fill",
+                assetName: "pinnacle"
             )
         case let n where n.contains("pointsbet"):
             return BookBrand(
-                color: Color(hex: 0xFF6B00),  // PointsBet orange
-                icon: "bolt.fill"
+                color: Color(hex: 0xFF6B00),
+                icon: "bolt.fill",
+                assetName: "pointsbet"
             )
         case let n where n.contains("bet365"):
             return BookBrand(
-                color: Color(hex: 0x027B5B),  // Bet365 green
-                icon: "circle.fill"
+                color: Color(hex: 0x027B5B),
+                icon: "circle.fill",
+                assetName: "bet365"
             )
         default:
-            return BookBrand(color: .brandTextSecondary, icon: "building.columns")
+            return BookBrand(color: .brandTextSecondary, icon: "building.columns", assetName: nil)
         }
     }
 }
@@ -89,6 +97,8 @@ struct BookBrand {
 struct TeamBrand {
     let abbreviation: String
     let color: Color
+    /// Asset catalog image name matching the Teams/ folder in Assets.xcassets.
+    var assetName: String { abbreviation }
 
     /// Attempts to find a team brand by searching for the team city/name
     /// inside the given string (typically `pick.side`).
@@ -104,6 +114,7 @@ struct TeamBrand {
 
     // Lookup keyed by lowercase team name fragment → (abbreviation, primary color).
     // Colors are each team's primary brand color from their official guidelines.
+    // Asset catalog images are stored as Teams/{abbreviation}.imageset/
     private static let lookup: [(String, TeamBrand)] = [
         // AL East
         ("yankees",      TeamBrand(abbreviation: "NYY", color: Color(hex: 0x003087))),
