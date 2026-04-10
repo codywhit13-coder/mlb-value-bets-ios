@@ -10,6 +10,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(AuthViewModel.self) private var auth
+    private var push = PushNotificationService.shared
 
     var body: some View {
         ZStack {
@@ -48,6 +49,42 @@ struct SettingsView: View {
                         .padding(.vertical, Theme.Spacing.xs)
                 } header: {
                     sectionHeader("MANAGE SUBSCRIPTION")
+                }
+                .listRowBackground(Color.brandSurface)
+
+                Section {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("PUSH NOTIFICATIONS")
+                                .font(Theme.Font.overline(11))
+                                .tracking(1.5)
+                                .foregroundStyle(Color.brandTextSecondary)
+                            Text(push.statusDescription)
+                                .font(Theme.Font.body(12))
+                                .foregroundStyle(Color.brandTextMuted)
+                        }
+                        Spacer()
+                        if push.isAuthorized {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(Color.winGreen)
+                        } else {
+                            Button {
+                                Task { await push.requestPermission() }
+                            } label: {
+                                Text("ENABLE")
+                                    .font(Theme.Font.overline(10))
+                                    .tracking(1.5)
+                                    .foregroundStyle(Color.brandBlue)
+                                    .padding(.horizontal, Theme.Spacing.md)
+                                    .padding(.vertical, 6)
+                                    .background(Color.brandBlue.opacity(0.15))
+                                    .clipShape(Capsule())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                } header: {
+                    sectionHeader("NOTIFICATIONS")
                 }
                 .listRowBackground(Color.brandSurface)
 

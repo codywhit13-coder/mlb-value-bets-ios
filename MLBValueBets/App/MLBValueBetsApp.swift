@@ -7,9 +7,11 @@
 //
 
 import SwiftUI
+import UIKit
 
 @main
 struct MLBValueBetsApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var auth = AuthViewModel()
 
     init() {
@@ -26,6 +28,31 @@ struct MLBValueBetsApp: App {
                 .environment(auth)
                 .preferredColorScheme(.dark)
                 .tint(Color.brandBlue)
+        }
+    }
+}
+
+// MARK: - AppDelegate (APNs callbacks)
+
+final class AppDelegate: NSObject, UIApplicationDelegate {
+
+    func application(
+        _ application: UIApplication,
+        didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
+    ) {
+        Task { @MainActor in
+            PushNotificationService.shared
+                .didRegisterForRemoteNotifications(deviceToken: deviceToken)
+        }
+    }
+
+    func application(
+        _ application: UIApplication,
+        didFailToRegisterForRemoteNotificationsWithError error: Error
+    ) {
+        Task { @MainActor in
+            PushNotificationService.shared
+                .didFailToRegisterForRemoteNotifications(error: error)
         }
     }
 }
