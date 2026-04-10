@@ -22,6 +22,12 @@ final class ViewSnapshotTests: XCTestCase {
 
     override class func setUp() {
         super.setUp()
+        // The test bundle hosts MLBValueBets via TEST_HOST, but tests render
+        // SwiftUI views directly without going through App.init — so we have
+        // to register the bundled .ttf files ourselves before any
+        // `Font.custom(...)` lookup runs. Idempotent.
+        FontLoader.registerCustomFonts()
+
         // Force consistent rendering across local + CI runs.
         // If you want to regenerate all baselines, set this to .all temporarily.
         // SnapshotTesting.isRecording = true

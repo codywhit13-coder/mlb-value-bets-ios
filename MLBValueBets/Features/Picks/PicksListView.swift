@@ -2,11 +2,18 @@
 //  PicksListView.swift
 //  MLBValueBets
 //
+//  Full picks browser with market filter chips. Filter chips use a
+//  matchedGeometryEffect-driven pill so the active state slides between
+//  options instead of hard-cutting. Selecting a filter triggers a
+//  selection haptic.
+//
 
 import SwiftUI
+import UIKit
 
 struct PicksListView: View {
     @State private var vm: PicksViewModel
+    @Namespace private var filterNamespace
 
     @MainActor
     init(vm: PicksViewModel? = nil) {
@@ -15,26 +22,26 @@ struct PicksListView: View {
 
     var body: some View {
         ZStack {
-            Color.brandBackground.ignoresSafeArea()
+            BrandBackground()
 
             ScrollView {
-                VStack(spacing: 16) {
+                VStack(spacing: Theme.Spacing.lg) {
                     filterBar
-                        .padding(.horizontal, 16)
-                        .padding(.top, 8)
+                        .padding(.horizontal, Theme.Spacing.lg)
+                        .padding(.top, Theme.Spacing.sm)
 
                     if let error = vm.errorMessage {
                         Text(error)
-                            .font(.footnote)
+                            .font(Theme.Font.body(13))
                             .foregroundStyle(Color.lossRed)
                             .padding()
                     } else if vm.filteredPicks.isEmpty && !vm.isLoading {
                         Text("No picks match this filter.")
-                            .font(.footnote)
+                            .font(Theme.Font.body(13))
                             .foregroundStyle(Color.brandTextSecondary)
-                            .padding(.vertical, 40)
+                            .padding(.vertical, Theme.Spacing.xxl)
                     } else {
-                        LazyVStack(spacing: 12) {
+                        LazyVStack(spacing: Theme.Spacing.md) {
                             ForEach(vm.filteredPicks) { pick in
                                 if pick.locked {
                                     LockedPickCard(pick: pick)
@@ -48,15 +55,15 @@ struct PicksListView: View {
                                 }
                             }
                         }
-                        .padding(.horizontal, 16)
+                        .padding(.horizontal, Theme.Spacing.lg)
                     }
                 }
-                .padding(.bottom, 24)
+                .padding(.bottom, Theme.Spacing.xl)
             }
             .refreshable { await vm.refresh() }
 
             if vm.isLoading && vm.response == nil {
-                ProgressView().tint(Color.brandAmber)
+                ProgressView().tint(Color.brandBlue)
             }
         }
         .navigationTitle("All Picks")
@@ -68,28 +75,50 @@ struct PicksListView: View {
 
     private var filterBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
+            HStack(spacing: Theme.Spacing.sm) {
                 ForEach(PicksViewModel.MarketFilter.allCases) { filter in
-                    Button {
-                        vm.selectedMarket = filter
-                    } label: {
-                        Text(filter.rawValue)
-                            .font(.system(size: 12, weight: .semibold))
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 7)
-                            .background(vm.selectedMarket == filter
-                                        ? Color.brandAmber
-                                        : Color.brandSurface)
-                            .foregroundStyle(vm.selectedMarket == filter
-                                             ? Color.black
-                                             : Color.brandTextPrimary)
-                            .clipShape(Capsule())
-                            .overlay(
-                                Capsule().stroke(Color.brandBorder, lineWidth: 1)
-                            )
-                    }
+                    filterChip(filter)
                 }
             }
         }
+    }
+
+    private func filterChip(_ filter: PicksViewModel.MarketFilter) -> some View {
+        let isActive = vm.selectedMarket == filter
+        return Button {
+            UISelectionFeedbackGenerator().selectionChanged()
+            withAnimation(Theme.Motion.spring) {
+                vm.selectedMarket = filter
+            }
+        } label: {
+            Text(filter.rawValue.uppercased())
+                .font(Theme.Font.overline(11))
+                .tracking(1.5)
+                .padding(.horizontal, Theme.Spacing.lg)
+                .padding(.vertical, Theme.Spacing.sm)
+                .foregroundStyle(isActive ? Color.white : Color.brandTextSecondary)
+                .background(
+                    ZStack {
+                        // Resting capsule — always present, light surface
+                        Capsule()
+                            .fill(Color.brandSurface)
+                        // Active capsule — slides between filters via
+                        // matched geometry, so the highlight feels physical
+                        if isActive {
+                            Capsule()
+                                .fill(Color.brandBlue)
+                                .matchedGeometryEffect(id: "filterPill", in: filterNamespace)
+                                .shadow(color: Color.brandBlue.opacity(0.40), radius: 10, x: 0, y: 0)
+                        }
+                    }
+                )
+                .overlay(
+                    Capsule().stroke(
+                        isActive ? Color.brandBlue : Color.brandBorder,
+                        lineWidth: 0.5
+                    )
+                )
+        }
+        .buttonStyle(.plain)
     }
 }

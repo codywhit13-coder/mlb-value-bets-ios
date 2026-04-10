@@ -13,49 +13,73 @@ struct SettingsView: View {
 
     var body: some View {
         ZStack {
-            Color.brandBackground.ignoresSafeArea()
+            BrandBackground()
 
             List {
-                Section("Account") {
+                Section {
                     if let user = auth.currentUser {
-                        LabeledContent("Email", value: user.email)
-                        LabeledContent("Plan") {
-                            Text(user.tier.displayName)
-                                .font(.system(size: 13, weight: .semibold))
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 4)
+                        labelRow("EMAIL", value: user.email)
+                        HStack {
+                            Text("PLAN")
+                                .font(Theme.Font.overline(11))
+                                .tracking(1.5)
+                                .foregroundStyle(Color.brandTextSecondary)
+                            Spacer()
+                            Text(user.tier.displayName.uppercased())
+                                .font(Theme.Font.overline(10))
+                                .tracking(1.5)
+                                .padding(.horizontal, Theme.Spacing.md)
+                                .padding(.vertical, 5)
                                 .background(user.isPro ? Color.brandAmber : Color.freeBadge)
                                 .foregroundStyle(user.isPro ? Color.black : Color.brandTextPrimary)
                                 .clipShape(Capsule())
                         }
                     }
+                } header: {
+                    sectionHeader("ACCOUNT")
                 }
                 .listRowBackground(Color.brandSurface)
+                .listRowSeparatorTint(Color.brandBorder)
 
-                Section("Manage Subscription") {
+                Section {
                     Text("To change your plan, add a payment method, or cancel, please sign in to your account at mlbvaluebets.com on a web browser.")
-                        .font(.footnote)
+                        .font(Theme.Font.body(12))
                         .foregroundStyle(Color.brandTextSecondary)
+                        .padding(.vertical, Theme.Spacing.xs)
+                } header: {
+                    sectionHeader("MANAGE SUBSCRIPTION")
                 }
                 .listRowBackground(Color.brandSurface)
 
-                Section("About") {
-                    LabeledContent("Version", value: appVersion)
-                    LabeledContent("Build", value: buildNumber)
+                Section {
+                    labelRow("VERSION", value: appVersion)
+                    labelRow("BUILD", value: buildNumber)
+                } header: {
+                    sectionHeader("ABOUT")
                 }
                 .listRowBackground(Color.brandSurface)
+                .listRowSeparatorTint(Color.brandBorder)
 
-                Section("Legal") {
-                    Link("Privacy Policy", destination: Config.privacyURL)
-                    Link("Terms of Service", destination: Config.termsURL)
+                Section {
+                    Link(destination: Config.privacyURL) {
+                        legalLink("PRIVACY POLICY")
+                    }
+                    Link(destination: Config.termsURL) {
+                        legalLink("TERMS OF SERVICE")
+                    }
+                } header: {
+                    sectionHeader("LEGAL")
                 }
                 .listRowBackground(Color.brandSurface)
+                .listRowSeparatorTint(Color.brandBorder)
 
                 Section {
                     Button(role: .destructive) {
                         Task { await auth.signOut() }
                     } label: {
-                        Text("Sign Out")
+                        Text("SIGN OUT")
+                            .font(Theme.Font.heading(13, weight: .bold))
+                            .tracking(1.5)
                             .frame(maxWidth: .infinity, alignment: .center)
                     }
                 }
@@ -66,6 +90,45 @@ struct SettingsView: View {
         }
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func sectionHeader(_ text: String) -> some View {
+        HStack(spacing: Theme.Spacing.sm) {
+            Rectangle()
+                .fill(Color.brandBlue)
+                .frame(width: 18, height: 1)
+            Text(text)
+                .font(Theme.Font.overline(11))
+                .tracking(2)
+                .foregroundStyle(Color.brandBlue)
+        }
+        .padding(.bottom, 4)
+    }
+
+    private func labelRow(_ label: String, value: String) -> some View {
+        HStack {
+            Text(label)
+                .font(Theme.Font.overline(11))
+                .tracking(1.5)
+                .foregroundStyle(Color.brandTextSecondary)
+            Spacer()
+            Text(value)
+                .font(Theme.Font.data(13, weight: .regular))
+                .foregroundStyle(Color.brandTextPrimary)
+        }
+    }
+
+    private func legalLink(_ text: String) -> some View {
+        HStack {
+            Text(text)
+                .font(Theme.Font.heading(12, weight: .semibold))
+                .tracking(1)
+                .foregroundStyle(Color.brandTextPrimary)
+            Spacer()
+            Image(systemName: "arrow.up.right")
+                .font(.system(size: 11, weight: .bold))
+                .foregroundStyle(Color.brandBlue)
+        }
     }
 
     private var appVersion: String {

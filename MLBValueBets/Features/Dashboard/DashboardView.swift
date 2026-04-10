@@ -2,6 +2,13 @@
 //  DashboardView.swift
 //  MLBValueBets
 //
+//  The home screen and primary job-to-be-done. Layered like the web frontend:
+//    1. BrandBackground (radial blue glow + grid + amber accent)
+//    2. Hero: huge display title + tier badge
+//    3. Live record strip (Bebas Neue numerals)
+//    4. Section overline + top picks list
+//    5. View All CTA
+//
 
 import SwiftUI
 
@@ -17,27 +24,24 @@ struct DashboardView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.brandBackground.ignoresSafeArea()
+                BrandBackground()
 
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
-                        header
+                    VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
+                        hero
                         recordStrip
-                        todaysPicksHeader
-                        picksList
+                        topPicksSection
                         viewAllButton
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 8)
-                    .padding(.bottom, 32)
+                    .padding(.horizontal, Theme.Spacing.lg)
+                    .padding(.top, Theme.Spacing.sm)
+                    .padding(.bottom, Theme.Spacing.xxl)
                 }
-                .refreshable {
-                    await vm.refresh()
-                }
+                .refreshable { await vm.refresh() }
 
                 if vm.isLoading && vm.todayResponse == nil {
                     ProgressView()
-                        .tint(Color.brandAmber)
+                        .tint(Color.brandBlue)
                 }
             }
             .navigationTitle("Dashboard")
@@ -61,84 +65,143 @@ struct DashboardView: View {
         }
     }
 
-    // MARK: - Subviews
+    // MARK: - Hero
 
-    private var header: some View {
-        HStack(alignment: .center) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Today's Picks")
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundStyle(Color.brandTextPrimary)
-                if let date = vm.todayResponse?.date {
-                    Text(date)
-                        .font(.caption)
-                        .foregroundStyle(Color.brandTextSecondary)
-                }
+    private var hero: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+            // Section overline
+            HStack(spacing: Theme.Spacing.sm) {
+                Rectangle()
+                    .fill(Color.brandBlue)
+                    .frame(width: 24, height: 1)
+                Text("TODAY")
+                    .font(Theme.Font.overline(11))
+                    .tracking(2)
+                    .foregroundStyle(Color.brandBlue)
+                Spacer()
+                tierBadge
             }
-            Spacer()
-            tierBadge
+
+            // Big display title
+            Text("VALUE PICKS")
+                .font(Theme.Font.display(40))
+                .tracking(1.5)
+                .foregroundStyle(Color.brandTextPrimary)
+
+            // Date subtitle
+            if let date = vm.todayResponse?.date {
+                Text(date.uppercased())
+                    .font(Theme.Font.overline(11))
+                    .tracking(1.5)
+                    .foregroundStyle(Color.brandTextSecondary)
+            }
         }
     }
 
     private var tierBadge: some View {
         let isPro = vm.todayResponse?.isPro ?? (auth.currentUser?.isPro ?? false)
         return Text(isPro ? "PRO" : "FREE")
-            .font(.system(size: 11, weight: .bold))
-            .padding(.horizontal, 10)
+            .font(Theme.Font.overline(10))
+            .tracking(1.5)
+            .foregroundStyle(isPro ? Color.black : Color.brandTextPrimary)
+            .padding(.horizontal, Theme.Spacing.md)
             .padding(.vertical, 5)
             .background(isPro ? Color.brandAmber : Color.freeBadge)
-            .foregroundStyle(isPro ? Color.black : Color.brandTextPrimary)
             .clipShape(Capsule())
+            .overlay(
+                Capsule().stroke(
+                    isPro ? Color.brandAmberDim : Color.brandBorder,
+                    lineWidth: 0.5
+                )
+            )
     }
+
+    // MARK: - Record strip
 
     @ViewBuilder
     private var recordStrip: some View {
         if let live = vm.liveRecord {
-            HStack(spacing: 20) {
-                stat(label: "Record", value: live.displayRecord)
-                Divider().frame(height: 28).background(Color.brandBorder)
-                stat(label: "Units",
-                     value: live.unitsProfit.map { String(format: "%+.1f", $0) } ?? "—",
-                     color: (live.unitsProfit ?? 0) >= 0 ? .winGreen : .lossRed)
-                Divider().frame(height: 28).background(Color.brandBorder)
-                stat(label: "ROI",
-                     value: live.roi.map { String(format: "%+.1f%%", $0 * 100) } ?? "—",
-                     color: (live.roi ?? 0) >= 0 ? .winGreen : .lossRed)
+            VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+                HStack(spacing: Theme.Spacing.sm) {
+                    // Pulse dot — small live indicator
+                    Circle()
+                        .fill(Color.brandBlue)
+                        .frame(width: 6, height: 6)
+                    Text("LIVE RECORD")
+                        .font(Theme.Font.overline(10))
+                        .tracking(2)
+                        .foregroundStyle(Color.brandTextSecondary)
+                    Spacer()
+                }
+                HStack(alignment: .firstTextBaseline, spacing: 0) {
+                    metric(
+                        value: live.displayRecord,
+                        label: "RECORD"
+                    )
+                    Spacer()
+                    metric(
+                        value: live.unitsProfit.map { String(format: "%+.1f", $0) } ?? "—",
+                        label: "UNITS",
+                        color: (live.unitsProfit ?? 0) >= 0 ? .winGreen : .lossRed
+                    )
+                    Spacer()
+                    metric(
+                        value: live.roi.map { String(format: "%+.1f%%", $0 * 100) } ?? "—",
+                        label: "ROI",
+                        color: (live.roi ?? 0) >= 0 ? .winGreen : .lossRed
+                    )
+                }
             }
-            .padding(14)
+            .padding(Theme.Spacing.lg)
             .frame(maxWidth: .infinity)
             .background(Color.brandSurface)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.lg))
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: Theme.Radius.lg)
                     .stroke(Color.brandBorder, lineWidth: 1)
             )
+            .shadow(color: Color.brandBlue.opacity(0.08), radius: 24, x: 0, y: 0)
         }
     }
 
-    private func stat(label: String, value: String, color: Color = .brandTextPrimary) -> some View {
-        VStack(spacing: 2) {
+    private func metric(
+        value: String,
+        label: String,
+        color: Color = .brandTextPrimary
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
             Text(value)
-                .font(.system(size: 16, weight: .bold))
+                .font(Theme.Font.display(28))
                 .foregroundStyle(color)
-            Text(label.uppercased())
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(Color.brandTextSecondary)
+                .tracking(0.5)
+            Text(label)
+                .font(Theme.Font.overline(9))
+                .tracking(1.5)
+                .foregroundStyle(Color.brandTextMuted)
         }
-        .frame(maxWidth: .infinity)
     }
 
-    private var todaysPicksHeader: some View {
-        HStack {
-            Text("Top Picks")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(Color.brandTextPrimary)
-            Spacer()
-            if let total = vm.todayResponse?.totalBets {
-                Text("\(vm.valueBetCount) value / \(total) total")
-                    .font(.caption)
-                    .foregroundStyle(Color.brandTextSecondary)
+    // MARK: - Top picks section
+
+    private var topPicksSection: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+            HStack(spacing: Theme.Spacing.sm) {
+                Rectangle()
+                    .fill(Color.brandBlue)
+                    .frame(width: 24, height: 1)
+                Text("TOP PICKS")
+                    .font(Theme.Font.overline(11))
+                    .tracking(2)
+                    .foregroundStyle(Color.brandBlue)
+                Spacer()
+                if let total = vm.todayResponse?.totalBets {
+                    Text("\(vm.valueBetCount) VALUE / \(total) TOTAL")
+                        .font(Theme.Font.overline(10))
+                        .tracking(1)
+                        .foregroundStyle(Color.brandTextMuted)
+                }
             }
+            picksList
         }
     }
 
@@ -146,16 +209,16 @@ struct DashboardView: View {
     private var picksList: some View {
         if let error = vm.errorMessage {
             Text(error)
-                .font(.footnote)
+                .font(Theme.Font.body(13))
                 .foregroundStyle(Color.lossRed)
-                .padding(.vertical, 8)
+                .padding(.vertical, Theme.Spacing.sm)
         } else if vm.topPicks.isEmpty && !vm.isLoading {
             Text("No picks available yet today. Check back shortly.")
-                .font(.footnote)
+                .font(Theme.Font.body(13))
                 .foregroundStyle(Color.brandTextSecondary)
-                .padding(.vertical, 20)
+                .padding(.vertical, Theme.Spacing.xl)
         } else {
-            VStack(spacing: 12) {
+            VStack(spacing: Theme.Spacing.md) {
                 ForEach(vm.topPicks) { pick in
                     if pick.locked {
                         LockedPickCard(pick: pick)
@@ -172,24 +235,29 @@ struct DashboardView: View {
         }
     }
 
+    // MARK: - CTA
+
     private var viewAllButton: some View {
         NavigationLink {
             PicksListView()
         } label: {
             HStack {
-                Text("View All Picks")
-                    .font(.system(size: 15, weight: .semibold))
+                Text("VIEW ALL PICKS")
+                    .font(Theme.Font.heading(13, weight: .bold))
+                    .tracking(1.5)
                 Spacer()
                 Image(systemName: "arrow.right")
+                    .font(.system(size: 14, weight: .bold))
             }
-            .foregroundStyle(Color.brandTextPrimary)
-            .padding(14)
+            .foregroundStyle(Color.brandBlue)
+            .padding(Theme.Spacing.lg)
             .background(Color.brandSurface)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.md))
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.brandBorder, lineWidth: 1)
+                RoundedRectangle(cornerRadius: Theme.Radius.md)
+                    .stroke(Color.brandBlue.opacity(0.40), lineWidth: 1)
             )
+            .shadow(color: Color.brandBlue.opacity(0.15), radius: 12, x: 0, y: 0)
         }
     }
 }

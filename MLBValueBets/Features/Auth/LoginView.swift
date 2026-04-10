@@ -15,45 +15,72 @@ struct LoginView: View {
 
     var body: some View {
         ZStack {
-            Color.brandBackground.ignoresSafeArea()
+            BrandBackground()
 
             ScrollView {
-                VStack(spacing: 28) {
-                    Spacer(minLength: 48)
+                VStack(spacing: Theme.Spacing.xl) {
+                    Spacer(minLength: Theme.Spacing.xxxl)
 
-                    // Logo + title
-                    VStack(spacing: 12) {
-                        Image(systemName: "baseball.fill")
-                            .font(.system(size: 56))
-                            .foregroundStyle(Color.brandAmber)
+                    // Hero
+                    VStack(spacing: Theme.Spacing.md) {
+                        // Diamond glyph instead of system baseball — feels
+                        // more like a fintech mark and matches the web's
+                        // diamond accent on PIN ✓ chips.
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 14)
+                                .fill(Color.brandSurface)
+                                .frame(width: 64, height: 64)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 14)
+                                        .stroke(Color.brandBlue.opacity(0.40), lineWidth: 1)
+                                )
+                            Image(systemName: "chart.line.uptrend.xyaxis")
+                                .font(.system(size: 28, weight: .bold))
+                                .foregroundStyle(Color.brandBlue)
+                        }
+                        .shadow(color: Color.brandBlue.opacity(0.30), radius: 24, x: 0, y: 0)
 
-                        Text("MLB Value Bets")
-                            .font(.system(size: 28, weight: .bold))
+                        Text("MLB VALUE BETS")
+                            .font(Theme.Font.display(34))
+                            .tracking(2)
                             .foregroundStyle(Color.brandTextPrimary)
 
-                        Text("Expert analysts. Real value.")
-                            .font(.subheadline)
+                        Text("MODEL-BACKED PICKS  ·  REAL EDGE")
+                            .font(Theme.Font.overline(10))
+                            .tracking(2)
                             .foregroundStyle(Color.brandTextSecondary)
                     }
-                    .padding(.bottom, 12)
+                    .padding(.bottom, Theme.Spacing.md)
 
                     // Form
-                    VStack(spacing: 16) {
-                        field(title: "Email",
-                              text: $vm.email,
-                              placeholder: "you@example.com",
-                              keyboard: .emailAddress,
-                              contentType: .emailAddress)
+                    VStack(spacing: Theme.Spacing.lg) {
+                        field(
+                            title: "EMAIL",
+                            text: $vm.email,
+                            placeholder: "you@example.com",
+                            keyboard: .emailAddress,
+                            contentType: .emailAddress
+                        )
 
-                        secureField(title: "Password",
-                                    text: $vm.password,
-                                    contentType: isSignUpMode ? .newPassword : .password)
+                        secureField(
+                            title: "PASSWORD",
+                            text: $vm.password,
+                            contentType: isSignUpMode ? .newPassword : .password
+                        )
 
                         if let error = vm.errorMessage {
-                            Text(error)
-                                .font(.footnote)
-                                .foregroundStyle(Color.lossRed)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                            HStack(spacing: Theme.Spacing.sm) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .font(.system(size: 11, weight: .bold))
+                                Text(error)
+                                    .font(Theme.Font.body(12))
+                            }
+                            .foregroundStyle(Color.lossRed)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, Theme.Spacing.md)
+                            .padding(.vertical, Theme.Spacing.sm)
+                            .background(Color.lossRed.opacity(0.08))
+                            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.sm))
                         }
 
                         Button {
@@ -68,16 +95,18 @@ struct LoginView: View {
                             HStack {
                                 if vm.isWorking {
                                     ProgressView()
-                                        .tint(.black)
+                                        .tint(.white)
                                 } else {
-                                    Text(isSignUpMode ? "Create Account" : "Sign In")
-                                        .font(.system(size: 16, weight: .semibold))
+                                    Text(isSignUpMode ? "CREATE ACCOUNT" : "SIGN IN")
+                                        .font(Theme.Font.heading(14, weight: .bold))
+                                        .tracking(2)
                                 }
                             }
-                            .frame(maxWidth: .infinity, minHeight: 48)
-                            .background(Color.brandAmber)
-                            .foregroundStyle(.black)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .frame(maxWidth: .infinity, minHeight: 52)
+                            .background(Color.brandBlue)
+                            .foregroundStyle(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.md))
+                            .shadow(color: Color.brandBlue.opacity(0.40), radius: 18, x: 0, y: 0)
                         }
                         .disabled(vm.isWorking)
 
@@ -85,7 +114,7 @@ struct LoginView: View {
                             Button("Forgot password?") {
                                 Task { await vm.sendPasswordReset() }
                             }
-                            .font(.footnote)
+                            .font(Theme.Font.body(12))
                             .foregroundStyle(Color.brandTextSecondary)
                         }
 
@@ -96,14 +125,14 @@ struct LoginView: View {
                             Text(isSignUpMode
                                  ? "Already have an account? Sign in"
                                  : "No account yet? Create one — it's free")
-                                .font(.footnote)
+                                .font(Theme.Font.body(12))
                                 .foregroundStyle(Color.brandTextSecondary)
                         }
-                        .padding(.top, 4)
+                        .padding(.top, Theme.Spacing.xs)
                     }
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, Theme.Spacing.xl)
 
-                    Spacer(minLength: 20)
+                    Spacer(minLength: Theme.Spacing.xl)
                 }
             }
         }
@@ -116,21 +145,23 @@ struct LoginView: View {
                        placeholder: String,
                        keyboard: UIKeyboardType,
                        contentType: UITextContentType) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
             Text(title)
-                .font(.caption)
-                .foregroundStyle(Color.brandTextSecondary)
+                .font(Theme.Font.overline(10))
+                .tracking(1.5)
+                .foregroundStyle(Color.brandBlue)
             TextField(placeholder, text: text)
+                .font(Theme.Font.body(15))
                 .textContentType(contentType)
                 .keyboardType(keyboard)
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.never)
-                .padding(12)
+                .padding(Theme.Spacing.md)
                 .background(Color.brandSurface)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.sm))
                 .foregroundStyle(Color.brandTextPrimary)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 10)
+                    RoundedRectangle(cornerRadius: Theme.Radius.sm)
                         .stroke(Color.brandBorder, lineWidth: 1)
                 )
         }
@@ -139,18 +170,20 @@ struct LoginView: View {
     private func secureField(title: String,
                              text: Binding<String>,
                              contentType: UITextContentType) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
             Text(title)
-                .font(.caption)
-                .foregroundStyle(Color.brandTextSecondary)
+                .font(Theme.Font.overline(10))
+                .tracking(1.5)
+                .foregroundStyle(Color.brandBlue)
             SecureField("••••••••", text: text)
+                .font(Theme.Font.body(15))
                 .textContentType(contentType)
-                .padding(12)
+                .padding(Theme.Spacing.md)
                 .background(Color.brandSurface)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.sm))
                 .foregroundStyle(Color.brandTextPrimary)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 10)
+                    RoundedRectangle(cornerRadius: Theme.Radius.sm)
                         .stroke(Color.brandBorder, lineWidth: 1)
                 )
         }

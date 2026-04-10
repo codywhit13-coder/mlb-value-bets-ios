@@ -12,12 +12,20 @@ import SwiftUI
 struct MLBValueBetsApp: App {
     @State private var auth = AuthViewModel()
 
+    init() {
+        // Register Bebas Neue / Barlow / IBM Plex Mono with Core Text before
+        // any view tries to resolve `Font.custom(...)`. Idempotent — also
+        // called from ViewSnapshotTests.setUp because the test bundle hosts
+        // this app via TEST_HOST and may not run App.init in every scenario.
+        FontLoader.registerCustomFonts()
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environment(auth)
                 .preferredColorScheme(.dark)
-                .tint(Color.brandAmber)
+                .tint(Color.brandBlue)
         }
     }
 }

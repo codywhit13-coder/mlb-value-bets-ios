@@ -5,6 +5,14 @@
 //  Unlocked pick card. Mirrors the design of
 //  frontend/src/components/picks/PickCard.tsx
 //
+//  Layout (top → bottom):
+//    1. Section overline:  "MONEYLINE  ·  FANDUEL"        (mono, tracked, blue)
+//    2. Matchup line:      "New York Yankees @ Boston Red Sox"
+//    3. Side + odds row:   "Yankees ML"           "+108"   (Bebas Neue display)
+//    4. Stats strip:       EDGE / EV / KELLY (mono numerals)
+//    5. Signals chip row:  Sharp / Pinnacle confirms (only when present)
+//    6. Footer:            game time or settled outcome
+//
 
 import SwiftUI
 
@@ -12,144 +20,218 @@ struct PickCard: View {
     let pick: Pick
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: Theme.Spacing.md) {
 
-            // Top row: matchup + market chip
-            HStack(alignment: .top) {
-                Text(pick.game)
-                    .font(.system(size: 14, weight: .semibold))
+            // 1. Overline — "MONEYLINE · FANDUEL"
+            overline
+
+            // 2. Matchup
+            Text(pick.game)
+                .font(Theme.Font.heading(15, weight: .semibold))
+                .foregroundStyle(Color.brandTextPrimary)
+                .lineLimit(2)
+                .minimumScaleFactor(0.9)
+                .fixedSize(horizontal: false, vertical: true)
+
+            // 3. Side + odds — the visual hero of the card
+            HStack(alignment: .firstTextBaseline) {
+                Text(pick.side)
+                    .font(Theme.Font.heading(20, weight: .bold))
                     .foregroundStyle(Color.brandTextPrimary)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.9)
-                    .fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: 8)
-                Text(pick.market.capitalized)
-                    .font(.system(size: 10, weight: .semibold))
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(Color.brandBorder)
-                    .foregroundStyle(Color.brandTextSecondary)
-                    .clipShape(Capsule())
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                Spacer(minLength: Theme.Spacing.sm)
+                Text(pick.bookOdds.map(formatOdds) ?? "—")
+                    .font(Theme.Font.display(28))
+                    .foregroundStyle(Color.brandTextPrimary)
+                    .tracking(1)
             }
 
-            // Badges row: Sharp / Pinnacle
+            // Hairline separator
+            Rectangle()
+                .fill(Color.brandBorder)
+                .frame(height: 1)
+                .padding(.vertical, Theme.Spacing.xxs)
+
+            // 4. Stats strip
+            statsStrip
+
+            // 5. Signals chips (only if at least one is on)
             if pick.sharpSignal || (pick.pinnacleConfirms ?? false) {
-                HStack(spacing: 6) {
-                    if pick.sharpSignal {
-                        badge(text: "⚡ Sharp", color: .brandAmber)
-                    }
-                    if pick.pinnacleConfirms == true {
-                        badge(text: "◆ PIN ✓", color: .brandPurple)
-                    }
-                    Spacer()
-                }
+                signalsRow
+                    .padding(.top, Theme.Spacing.xxs)
             }
 
-            // Main row: side + odds
-            HStack(alignment: .center) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Recommended Bet")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(Color.brandTextMuted)
-                    Text(pick.side)
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundStyle(Color.brandTextPrimary)
-                }
-                Spacer()
-                VStack(alignment: .trailing, spacing: 4) {
-                    Text(pick.bookOdds.map { formatOdds($0) } ?? "—")
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
-                        .foregroundStyle(Color.brandTextPrimary)
-                    if let book = pick.book {
-                        Text(book)
-                            .font(.system(size: 10))
-                            .foregroundStyle(Color.brandTextSecondary)
-                    }
-                }
-            }
-
-            // Bottom stats strip
-            HStack(spacing: 0) {
-                stat(
-                    value: pick.edgePct.map { String(format: "+%.2f%%", $0) } ?? "—",
-                    label: "Edge",
-                    color: .edgeColor(for: pick.confidenceTier)
-                )
-                Divider().frame(height: 28).background(Color.brandBorder)
-                stat(
-                    value: pick.evPct.map { String(format: "+%.2f%%", $0) } ?? "—",
-                    label: "EV"
-                )
-                Divider().frame(height: 28).background(Color.brandBorder)
-                stat(
-                    value: (pick.confidence ?? pick.confidenceTier.rawValue).capitalized,
-                    label: "Conf",
-                    color: .edgeColor(for: pick.confidenceTier)
-                )
-            }
-
-            // Outcome footer (only shown when settled)
-            if let outcome = pick.outcome {
-                HStack {
-                    Circle()
-                        .fill(Color.outcomeColor(for: outcome))
-                        .frame(width: 8, height: 8)
-                    Text(outcome.uppercased())
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(Color.outcomeColor(for: outcome))
-                    Spacer()
-                    if let game_time = pick.gameTime {
-                        Text(game_time.asLocalGameTime)
-                            .font(.system(size: 11))
-                            .foregroundStyle(Color.brandTextSecondary)
-                    }
-                }
-            } else if let gameTime = pick.gameTime {
-                HStack {
-                    Image(systemName: "clock")
-                        .font(.system(size: 10))
-                    Text(gameTime.asLocalGameTime)
-                        .font(.system(size: 11))
-                    Spacer()
-                }
-                .foregroundStyle(Color.brandTextSecondary)
-            }
+            // 6. Footer — outcome (if settled) or game time
+            footer
+                .padding(.top, Theme.Spacing.xxs)
         }
-        .padding(14)
+        .padding(Theme.Spacing.lg)
         .background(Color.brandSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.lg))
         .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(Color.brandBorder, lineWidth: 1)
+            RoundedRectangle(cornerRadius: Theme.Radius.lg)
+                .stroke(borderColor, lineWidth: borderWidth)
         )
+        .shadow(color: highEdgeShadow, radius: 18, x: 0, y: 0)
+    }
+
+    // MARK: - Overline
+
+    private var overline: some View {
+        HStack(spacing: Theme.Spacing.sm) {
+            // Blue prefix bar — visual marker for "this is a section"
+            Rectangle()
+                .fill(Color.brandBlue)
+                .frame(width: 18, height: 1)
+            Text(overlineText)
+                .font(Theme.Font.overline(10))
+                .tracking(2)
+                .foregroundStyle(Color.brandBlue)
+            Spacer()
+        }
+    }
+
+    private var overlineText: String {
+        let market = pick.market.uppercased()
+        if let book = pick.book?.uppercased() {
+            return "\(market)  ·  \(book)"
+        }
+        return market
+    }
+
+    // MARK: - Stats strip
+
+    private var statsStrip: some View {
+        HStack(spacing: 0) {
+            stat(
+                value: pick.edgePct.map { String(format: "+%.1f%%", $0) } ?? "—",
+                label: "EDGE",
+                color: .edgeColor(for: pick.confidenceTier)
+            )
+            divider
+            stat(
+                value: pick.evPct.map { String(format: "+%.1f%%", $0) } ?? "—",
+                label: "EV"
+            )
+            divider
+            stat(
+                value: String(format: "%.1f%%", pick.kellyFraction * 100),
+                label: "KELLY"
+            )
+        }
+    }
+
+    private var divider: some View {
+        Rectangle()
+            .fill(Color.brandBorder)
+            .frame(width: 1, height: 28)
+    }
+
+    private func stat(
+        value: String,
+        label: String,
+        color: Color = .brandTextPrimary
+    ) -> some View {
+        VStack(spacing: 4) {
+            Text(value)
+                .font(Theme.Font.data(15, weight: .semibold))
+                .foregroundStyle(color)
+            Text(label)
+                .font(Theme.Font.overline(9))
+                .tracking(1.5)
+                .foregroundStyle(Color.brandTextMuted)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - Signals chips
+
+    private var signalsRow: some View {
+        HStack(spacing: Theme.Spacing.sm) {
+            if pick.sharpSignal {
+                chip(text: "SHARP", icon: "bolt.fill", color: .brandAmber)
+            }
+            if pick.pinnacleConfirms == true {
+                chip(text: "PIN ✓", icon: "diamond.fill", color: .brandBlue)
+            }
+            Spacer()
+        }
+    }
+
+    private func chip(text: String, icon: String, color: Color) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.system(size: 9, weight: .bold))
+            Text(text)
+                .font(Theme.Font.overline(10))
+                .tracking(1)
+        }
+        .padding(.horizontal, Theme.Spacing.sm)
+        .padding(.vertical, 4)
+        .foregroundStyle(color)
+        .background(color.opacity(0.12))
+        .overlay(
+            Capsule().stroke(color.opacity(0.35), lineWidth: 0.5)
+        )
+        .clipShape(Capsule())
+    }
+
+    // MARK: - Footer
+
+    @ViewBuilder
+    private var footer: some View {
+        if let outcome = pick.outcome {
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(Color.outcomeColor(for: outcome))
+                    .frame(width: 7, height: 7)
+                Text(outcome.uppercased())
+                    .font(Theme.Font.overline(10))
+                    .tracking(1.5)
+                    .foregroundStyle(Color.outcomeColor(for: outcome))
+                Spacer()
+                if let gameTime = pick.gameTime {
+                    Text(gameTime.asLocalGameTime)
+                        .font(Theme.Font.data(11, weight: .regular))
+                        .foregroundStyle(Color.brandTextMuted)
+                }
+            }
+        } else if let gameTime = pick.gameTime {
+            HStack(spacing: 6) {
+                Image(systemName: "clock")
+                    .font(.system(size: 9, weight: .medium))
+                Text(gameTime.asLocalGameTime)
+                    .font(Theme.Font.data(11, weight: .regular))
+                Spacer()
+            }
+            .foregroundStyle(Color.brandTextMuted)
+        }
+    }
+
+    // MARK: - Visual derivations
+
+    /// High-edge picks get a faint blue glow + tinted border to draw the eye.
+    /// Mirrors the web's `.high-confidence` rule.
+    private var isHighEdge: Bool {
+        pick.confidenceTier == .high
+    }
+
+    private var borderColor: Color {
+        isHighEdge ? Color.brandBlue.opacity(0.35) : Color.brandBorder
+    }
+
+    private var borderWidth: CGFloat {
+        isHighEdge ? 1.0 : 1.0
+    }
+
+    private var highEdgeShadow: Color {
+        isHighEdge ? Color.brandBlue.opacity(0.18) : .clear
     }
 
     // MARK: - Helpers
 
     private func formatOdds(_ odds: Int) -> String {
         odds > 0 ? "+\(odds)" : "\(odds)"
-    }
-
-    private func badge(text: String, color: Color) -> some View {
-        Text(text)
-            .font(.system(size: 10, weight: .bold))
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
-            .background(color.opacity(0.18))
-            .foregroundStyle(color)
-            .clipShape(Capsule())
-    }
-
-    private func stat(value: String, label: String, color: Color = .brandTextPrimary) -> some View {
-        VStack(spacing: 2) {
-            Text(value)
-                .font(.system(size: 13, weight: .bold, design: .rounded))
-                .foregroundStyle(color)
-            Text(label.uppercased())
-                .font(.system(size: 9, weight: .medium))
-                .foregroundStyle(Color.brandTextMuted)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 4)
     }
 }

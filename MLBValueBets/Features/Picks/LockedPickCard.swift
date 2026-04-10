@@ -13,55 +13,69 @@ struct LockedPickCard: View {
     @State private var showInfo: Bool = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: Theme.Spacing.md) {
 
-            // Header row
-            HStack(alignment: .top) {
-                Text(pick.game)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Color.brandTextPrimary)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.9)
-                    .fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: 8)
-                Text(pick.market.capitalized)
-                    .font(.system(size: 10, weight: .semibold))
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(Color.brandBorder)
-                    .foregroundStyle(Color.brandTextSecondary)
-                    .clipShape(Capsule())
+            // Overline (matches PickCard exactly so locked + unlocked
+            // line up visually in a list)
+            HStack(spacing: Theme.Spacing.sm) {
+                Rectangle()
+                    .fill(Color.brandTextMuted)
+                    .frame(width: 18, height: 1)
+                Text(pick.market.uppercased())
+                    .font(Theme.Font.overline(10))
+                    .tracking(2)
+                    .foregroundStyle(Color.brandTextMuted)
+                Spacer()
             }
 
-            // Locked body. A dimmed panel with the lock message centered —
-            // no blurred placeholder text underneath to visually bleed
-            // through. The card's visual weight is preserved via minHeight
-            // so it matches a real PickCard in a list.
+            // Game
+            Text(pick.game)
+                .font(Theme.Font.heading(15, weight: .semibold))
+                .foregroundStyle(Color.brandTextPrimary)
+                .lineLimit(2)
+                .minimumScaleFactor(0.9)
+                .fixedSize(horizontal: false, vertical: true)
+
+            // Locked panel
             ZStack {
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: Theme.Radius.md)
                     .fill(Color.brandBackground.opacity(0.5))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Theme.Radius.md)
+                            .stroke(Color.brandBorder, lineWidth: 0.5)
+                    )
 
-                VStack(spacing: 6) {
+                VStack(spacing: Theme.Spacing.sm) {
                     Image(systemName: "lock.fill")
-                        .font(.system(size: 22))
+                        .font(.system(size: 20, weight: .bold))
                         .foregroundStyle(Color.brandAmber)
-                    Text("Pro pick")
-                        .font(.system(size: 12, weight: .semibold))
+                    Text("PRO PICK")
+                        .font(Theme.Font.overline(11))
+                        .tracking(2)
                         .foregroundStyle(Color.brandTextPrimary)
-                    Button("How to unlock") { showInfo = true }
-                        .font(.caption2)
-                        .foregroundStyle(Color.brandTextSecondary)
+                    Button {
+                        showInfo = true
+                    } label: {
+                        Text("HOW TO UNLOCK")
+                            .font(Theme.Font.overline(9))
+                            .tracking(1.5)
+                            .foregroundStyle(Color.brandTextSecondary)
+                            .padding(.horizontal, Theme.Spacing.md)
+                            .padding(.vertical, 4)
+                            .overlay(
+                                Capsule().stroke(Color.brandBorder, lineWidth: 0.5)
+                            )
+                    }
                 }
-                .padding(.vertical, 14)
+                .padding(.vertical, Theme.Spacing.md)
             }
-            .frame(maxWidth: .infinity, minHeight: 110)
-            .padding(.vertical, 6)
+            .frame(maxWidth: .infinity, minHeight: 124)
         }
-        .padding(14)
+        .padding(Theme.Spacing.lg)
         .background(Color.brandSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.lg))
         .overlay(
-            RoundedRectangle(cornerRadius: 14)
+            RoundedRectangle(cornerRadius: Theme.Radius.lg)
                 .stroke(Color.brandBorder, lineWidth: 1)
         )
         .alert("Unlock More Picks", isPresented: $showInfo) {

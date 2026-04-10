@@ -22,6 +22,7 @@ $root = 'C:\Users\codyw\Documents\mlb-value-bets-ios\MLBValueBets'
 $files = @(
     "$root\Core\Utilities\Config.swift",
     "$root\Core\Utilities\ErrorTypes.swift",
+    "$root\Core\Utilities\FontLoader.swift",
     "$root\Core\Utilities\Extensions\Date+Format.swift",
     "$root\Core\Models\Pick.swift",
     "$root\Core\Models\PicksResponse.swift",
