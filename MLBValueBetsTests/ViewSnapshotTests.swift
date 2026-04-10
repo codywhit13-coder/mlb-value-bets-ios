@@ -33,8 +33,7 @@ final class ViewSnapshotTests: XCTestCase {
         // new PNG to MLBValueBetsTests/__Snapshots__/, which the workflow's
         // "Upload snapshot PNGs" step bundles into the artifact. Download,
         // commit the PNGs, and flip back to false.
-        // TEMPORARY: recording baselines for History tab tests.
-        isRecording = true
+        // isRecording = true
     }
 
     // MARK: - PickCard
