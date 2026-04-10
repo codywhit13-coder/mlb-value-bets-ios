@@ -55,13 +55,19 @@ targets:
       testTargets:
         - MLBValueBetsTests
       gatherCoverageData: false
+    info:
+      properties:
+        CFBundleURLTypes:
+          - CFBundleURLName: com.titanstack.mlbvaluebets
+            CFBundleURLSchemes:
+              - valuebets
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.titanstack.mlbvaluebets
         PRODUCT_NAME: MLBValueBets
         # Modern Xcode: generate Info.plist from build settings
         GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_CFBundleDisplayName: MLB Value Bets
+        INFOPLIST_KEY_CFBundleDisplayName: Value Bets
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.sports
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UILaunchScreen_BackgroundColor: LaunchBackground
