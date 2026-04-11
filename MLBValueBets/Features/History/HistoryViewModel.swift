@@ -52,6 +52,12 @@ final class HistoryViewModel {
     var isSessionExpired: Bool = false
     var selectedConfidence: ConfidenceFilter = .high
     var selectedDate: String? = nil  // nil = auto-select most recent
+    var isPro: Bool = false
+
+    /// History depth: free = 7 days, pro = 90 days.
+    private var historyDays: Int { isPro ? 90 : 7 }
+
+    var historyRangeLabel: String { isPro ? "LAST 90 DAYS" : "LAST 7 DAYS" }
 
     // MARK: - Grouped by date
 
@@ -212,7 +218,7 @@ final class HistoryViewModel {
         defer { isLoading = false }
 
         do {
-            let fresh = try await PicksService.shared.fetchHistory(days: 7)
+            let fresh = try await PicksService.shared.fetchHistory(days: historyDays)
             self.allPicks = fresh
             self.lastCachedAt = nil
             PicksCacheService.save(fresh, forKey: PicksCacheService.historyKey)

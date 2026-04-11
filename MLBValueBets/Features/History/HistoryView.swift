@@ -19,6 +19,7 @@ import UIKit
 
 struct HistoryView: View {
     @State private var vm: HistoryViewModel
+    @Environment(AuthViewModel.self) private var auth
     @Namespace private var filterNamespace
     @State private var showCalendar = false
     @State private var calendarDate = Date()
@@ -54,6 +55,7 @@ struct HistoryView: View {
         .navigationTitle("History")
         .navigationBarTitleDisplayMode(.inline)
         .task {
+            vm.isPro = auth.currentUser?.isPro ?? false
             if vm.allPicks.isEmpty && vm.errorMessage == nil {
                 await vm.load()
             }
@@ -71,7 +73,7 @@ struct HistoryView: View {
                 Rectangle()
                     .fill(Color.brandBlue)
                     .frame(width: 24, height: 1)
-                Text("LAST 7 DAYS")
+                Text(vm.historyRangeLabel)
                     .font(Theme.Font.overline(11))
                     .tracking(2)
                     .foregroundStyle(Color.brandBlue)
