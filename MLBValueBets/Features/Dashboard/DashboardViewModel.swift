@@ -24,17 +24,31 @@ final class DashboardViewModel {
         guard let resp = todayResponse else { return [] }
         let bets = resp.valueBets
 
-        if resp.tier == "pro" {
-            // Pro: show first 3 picks (any market)
-            return Array(bets.prefix(3))
+        if resp.isPro {
+            // Pro: show top 5 picks (any market)
+            return Array(bets.prefix(5))
         } else {
-            // Free: only top 2 moneyline picks
-            return Array(bets.filter { $0.market == "moneyline" }.prefix(2))
+            // Free: show unlocked picks + up to 3 locked teasers
+            // Backend already marks locked=true on gated picks
+            let unlocked = bets.filter { !$0.locked }
+            let locked = Array(bets.filter { $0.locked }.prefix(3))
+            return unlocked + locked
         }
     }
 
     var valueBetCount: Int {
-        todayResponse?.valueBets.filter { $0.valueBet }.count ?? 0
+        todayResponse?.valueBets.filter { $0.valueBet && !$0.locked }.count ?? 0
+    }
+
+    /// Formatted date for display — e.g. "WEDNESDAY, APR 9"
+    var displayDate: String? {
+        guard let dateStr = todayResponse?.date else { return nil }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        guard let date = formatter.date(from: dateStr) else { return dateStr }
+        let display = DateFormatter()
+        display.dateFormat = "EEEE, MMM d"
+        return display.string(from: date).uppercased()
     }
 
     // MARK: - Actions

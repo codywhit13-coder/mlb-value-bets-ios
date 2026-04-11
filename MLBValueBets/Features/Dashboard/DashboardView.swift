@@ -99,8 +99,8 @@ struct DashboardView: View {
                 .foregroundStyle(Color.brandTextPrimary)
 
             // Date subtitle
-            if let date = vm.todayResponse?.date {
-                Text(date.uppercased())
+            if let date = vm.displayDate {
+                Text(date)
                     .font(Theme.Font.overline(11))
                     .tracking(1.5)
                     .foregroundStyle(Color.brandTextSecondary)
