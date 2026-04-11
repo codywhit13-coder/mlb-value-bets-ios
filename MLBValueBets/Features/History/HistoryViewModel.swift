@@ -51,6 +51,7 @@ final class HistoryViewModel {
     var lastCachedAt: Date? = nil
     var isSessionExpired: Bool = false
     var selectedConfidence: ConfidenceFilter = .high
+    var selectedDate: String? = nil  // nil = auto-select most recent
 
     // MARK: - Grouped by date
 
@@ -76,22 +77,104 @@ final class HistoryViewModel {
         allPicks.filter { selectedConfidence.matches($0) }
     }
 
-    var sections: [DaySection] {
-        let grouped = Dictionary(grouping: filteredPicks) { pick -> String in
-            // Extract YYYY-MM-DD from gameTime, or "Unknown"
-            guard let gt = pick.gameTime, gt.count >= 10 else { return "Unknown" }
-            return String(gt.prefix(10))
-        }
+    // MARK: - Date navigation
 
-        return grouped
-            .map { (dateStr, picks) in
-                DaySection(
-                    date: dateStr,
-                    displayDate: Self.formatSectionDate(dateStr),
-                    picks: picks
-                )
-            }
-            .sorted { $0.date > $1.date }  // Most recent first
+    /// All unique dates that have picks (from ALL picks, independent of
+    /// the confidence filter so date navigation stays stable).
+    /// Sorted most-recent first.
+    var availableDates: [String] {
+        let dates = Set(allPicks.compactMap { pick -> String? in
+            guard let gt = pick.gameTime, gt.count >= 10 else { return nil }
+            return String(gt.prefix(10))
+        })
+        return dates.sorted(by: >)
+    }
+
+    /// The currently effective date — selected date if valid, otherwise most recent.
+    var effectiveDate: String? {
+        if let s = selectedDate, availableDates.contains(s) { return s }
+        return availableDates.first
+    }
+
+    private var currentDateIndex: Int {
+        guard let d = effectiveDate else { return 0 }
+        return availableDates.firstIndex(of: d) ?? 0
+    }
+
+    var currentDateDisplay: String {
+        guard let date = effectiveDate else { return "—" }
+        return Self.formatSectionDate(date)
+    }
+
+    var canGoEarlier: Bool {
+        currentDateIndex < availableDates.count - 1
+    }
+
+    var canGoLater: Bool {
+        currentDateIndex > 0
+    }
+
+    func goToEarlierDate() {
+        let idx = currentDateIndex
+        if idx < availableDates.count - 1 {
+            selectedDate = availableDates[idx + 1]
+        }
+    }
+
+    func goToLaterDate() {
+        let idx = currentDateIndex
+        if idx > 0 {
+            selectedDate = availableDates[idx - 1]
+        }
+    }
+
+    /// Navigate to a calendar-picked date. Snaps to the nearest available
+    /// date if the exact date has no picks.
+    func selectDate(_ date: Date) {
+        let str = Self.parseFormatter.string(from: date)
+        if availableDates.contains(str) {
+            selectedDate = str
+        } else {
+            selectedDate = availableDates.min(by: {
+                guard let a = Self.parseFormatter.date(from: $0),
+                      let b = Self.parseFormatter.date(from: $1) else { return false }
+                return abs(a.timeIntervalSince(date)) < abs(b.timeIntervalSince(date))
+            })
+        }
+    }
+
+    var effectiveDateAsDate: Date? {
+        guard let d = effectiveDate else { return nil }
+        return Self.parseFormatter.date(from: d)
+    }
+
+    var calendarDateRange: ClosedRange<Date>? {
+        guard let oldest = availableDates.last,
+              let newest = availableDates.first,
+              let minDate = Self.parseFormatter.date(from: oldest),
+              let maxDate = Self.parseFormatter.date(from: newest) else { return nil }
+        return minDate...maxDate
+    }
+
+    /// Picks for the selected date, filtered by confidence.
+    var currentDatePicks: [Pick] {
+        guard let date = effectiveDate else { return [] }
+        return filteredPicks.filter { pick in
+            guard let gt = pick.gameTime, gt.count >= 10 else { return false }
+            return String(gt.prefix(10)) == date
+        }
+    }
+
+    /// Section for the current date (nil when no picks match).
+    var currentSection: DaySection? {
+        guard let date = effectiveDate else { return nil }
+        let picks = currentDatePicks
+        guard !picks.isEmpty else { return nil }
+        return DaySection(
+            date: date,
+            displayDate: Self.formatSectionDate(date),
+            picks: picks
+        )
     }
 
     var totalRecord: String {

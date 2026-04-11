@@ -118,12 +118,6 @@ struct DashboardView: View {
             .padding(.vertical, 5)
             .background(isPro ? Color.brandAmber : Color.freeBadge)
             .clipShape(Capsule())
-            .overlay(
-                Capsule().stroke(
-                    isPro ? Color.brandAmberDim : Color.brandBorder,
-                    lineWidth: 0.5
-                )
-            )
     }
 
     // MARK: - Record strip

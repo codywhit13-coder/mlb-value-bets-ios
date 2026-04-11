@@ -2,15 +2,16 @@
 //  HistoryView.swift
 //  MLBValueBets
 //
-//  Settled picks browser — 4th tab ("History"). Shows recent settled
-//  picks grouped by game date with a mini record strip per day and
-//  a 7-day summary header.
+//  Settled picks browser — 3rd tab ("History"). Shows settled picks
+//  one date at a time with prev/next navigation and a calendar picker
+//  to jump to a specific date.
 //
 //  Layout:
 //    1. BrandBackground
 //    2. Summary header — "LAST 7 DAYS" overline + total record display
-//    3. Date sections — date header with mini record, picks list
-//    4. Loading / empty / error states (reuses LoadingStates primitives)
+//    3. Confidence filter bar (High / Medium / Low)
+//    4. Date navigator — ← Tue, Apr 8  📅 →
+//    5. Day section — record strip + picks for the selected date
 //
 
 import SwiftUI
@@ -19,6 +20,8 @@ import UIKit
 struct HistoryView: View {
     @State private var vm: HistoryViewModel
     @Namespace private var filterNamespace
+    @State private var showCalendar = false
+    @State private var calendarDate = Date()
 
     @MainActor
     init(vm: HistoryViewModel? = nil) {
@@ -37,6 +40,7 @@ struct HistoryView: View {
                     summaryHeader
                     if !vm.allPicks.isEmpty {
                         confidenceFilterBar
+                        dateNavigator
                     }
                     content
                 }
@@ -53,6 +57,9 @@ struct HistoryView: View {
                 await vm.load()
             }
         }
+        .sheet(isPresented: $showCalendar) {
+            calendarSheet
+        }
     }
 
     // MARK: - Summary header
@@ -63,10 +70,11 @@ struct HistoryView: View {
                 Rectangle()
                     .fill(Color.brandBlue)
                     .frame(width: 24, height: 1)
-                Text("LAST 7 DAYS")
+                Text("\(vm.selectedConfidence.rawValue.uppercased()) CONFIDENCE · LAST 7 DAYS")
                     .font(Theme.Font.overline(11))
                     .tracking(2)
                     .foregroundStyle(Color.brandBlue)
+                    .contentTransition(.numericText())
                 Spacer()
             }
 
@@ -80,8 +88,123 @@ struct HistoryView: View {
                     .font(Theme.Font.overline(11))
                     .tracking(1.5)
                     .foregroundStyle(Color.brandTextSecondary)
+                    .contentTransition(.numericText())
             }
         }
+        .animation(Theme.Motion.spring, value: vm.selectedConfidence)
+    }
+
+    // MARK: - Date navigator
+
+    private var dateNavigator: some View {
+        HStack(spacing: Theme.Spacing.md) {
+            Button {
+                HapticService.light()
+                withAnimation(Theme.Motion.spring) { vm.goToEarlierDate() }
+            } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(
+                        vm.canGoEarlier ? Color.brandBlue : Color.brandTextMuted.opacity(0.3)
+                    )
+                    .frame(width: 34, height: 34)
+                    .background(Color.brandSurface)
+                    .clipShape(Circle())
+                    .overlay(
+                        Circle().stroke(
+                            vm.canGoEarlier ? Color.brandBlue.opacity(0.30) : Color.brandBorder,
+                            lineWidth: 0.5
+                        )
+                    )
+            }
+            .disabled(!vm.canGoEarlier)
+
+            Spacer()
+
+            Text(vm.currentDateDisplay.uppercased())
+                .font(Theme.Font.heading(14, weight: .semibold))
+                .tracking(1.5)
+                .foregroundStyle(Color.brandTextPrimary)
+
+            Spacer()
+
+            Button {
+                calendarDate = vm.effectiveDateAsDate ?? Date()
+                showCalendar = true
+            } label: {
+                Image(systemName: "calendar")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(Color.brandBlue)
+                    .frame(width: 34, height: 34)
+                    .background(Color.brandSurface)
+                    .clipShape(Circle())
+                    .overlay(
+                        Circle().stroke(Color.brandBlue.opacity(0.30), lineWidth: 0.5)
+                    )
+            }
+
+            Button {
+                HapticService.light()
+                withAnimation(Theme.Motion.spring) { vm.goToLaterDate() }
+            } label: {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(
+                        vm.canGoLater ? Color.brandBlue : Color.brandTextMuted.opacity(0.3)
+                    )
+                    .frame(width: 34, height: 34)
+                    .background(Color.brandSurface)
+                    .clipShape(Circle())
+                    .overlay(
+                        Circle().stroke(
+                            vm.canGoLater ? Color.brandBlue.opacity(0.30) : Color.brandBorder,
+                            lineWidth: 0.5
+                        )
+                    )
+            }
+            .disabled(!vm.canGoLater)
+        }
+        .padding(.vertical, Theme.Spacing.sm)
+    }
+
+    // MARK: - Calendar sheet
+
+    private var calendarSheet: some View {
+        NavigationStack {
+            VStack {
+                if let range = vm.calendarDateRange {
+                    DatePicker(
+                        "",
+                        selection: $calendarDate,
+                        in: range,
+                        displayedComponents: .date
+                    )
+                    .datePickerStyle(.graphical)
+                    .tint(Color.brandBlue)
+                    .padding()
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.brandBackground)
+            .navigationTitle("Jump to Date")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Cancel") { showCalendar = false }
+                        .foregroundStyle(Color.brandTextSecondary)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Go") {
+                        vm.selectDate(calendarDate)
+                        showCalendar = false
+                    }
+                    .font(.headline)
+                    .foregroundStyle(Color.brandBlue)
+                }
+            }
+        }
+        .presentationDetents([.medium])
+        .presentationDragIndicator(.visible)
     }
 
     // MARK: - Content
@@ -105,10 +228,12 @@ struct HistoryView: View {
                 actionTitle: "Refresh",
                 action: { Task { await vm.refresh() } }
             )
-        } else if vm.filteredPicks.isEmpty {
+        } else if let section = vm.currentSection {
+            selectedDateContent(section)
+        } else if vm.effectiveDate != nil {
             EmptyStateView(
                 headline: "No \(vm.selectedConfidence.rawValue.lowercased()) confidence picks",
-                message: "No settled picks match the \(vm.selectedConfidence.subtitle) range. Try a different confidence tier.",
+                message: "No picks match the \(vm.selectedConfidence.subtitle) range on this date. Try a different confidence tier or date.",
                 actionTitle: "Show High",
                 action: {
                     withAnimation(Theme.Motion.spring) {
@@ -117,30 +242,24 @@ struct HistoryView: View {
                 }
             )
             .padding(.top, Theme.Spacing.lg)
-        } else {
-            daySections
         }
     }
 
-    // MARK: - Day sections
+    // MARK: - Selected date content
 
-    private var daySections: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
-            ForEach(vm.sections) { section in
-                VStack(alignment: .leading, spacing: Theme.Spacing.md) {
-                    daySectionHeader(section)
+    private func selectedDateContent(_ section: HistoryViewModel.DaySection) -> some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+            daySectionHeader(section)
 
-                    VStack(spacing: Theme.Spacing.md) {
-                        ForEach(Array(section.picks.enumerated()), id: \.element.id) { index, pick in
-                            NavigationLink {
-                                PickDetailView(pick: pick)
-                            } label: {
-                                PickCard(pick: pick)
-                            }
-                            .buttonStyle(.card)
-                            .staggeredAppearance(index: index)
-                        }
+            VStack(spacing: Theme.Spacing.md) {
+                ForEach(Array(section.picks.enumerated()), id: \.element.id) { index, pick in
+                    NavigationLink {
+                        PickDetailView(pick: pick)
+                    } label: {
+                        PickCard(pick: pick)
                     }
+                    .buttonStyle(.card)
+                    .staggeredAppearance(index: index)
                 }
             }
         }
@@ -216,12 +335,6 @@ struct HistoryView: View {
                     }
                 }
             )
-            .overlay(
-                Capsule().stroke(
-                    isActive ? Color.brandBlue : Color.brandBorder,
-                    lineWidth: 0.5
-                )
-            )
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(filter.rawValue) confidence filter")
@@ -231,38 +344,63 @@ struct HistoryView: View {
     // MARK: - Day section header
 
     private func daySectionHeader(_ section: HistoryViewModel.DaySection) -> some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
-            // Date overline
-            HStack(spacing: Theme.Spacing.sm) {
-                Rectangle()
-                    .fill(Color.brandBlue)
-                    .frame(width: 18, height: 1)
-                Text(section.displayDate.uppercased())
-                    .font(Theme.Font.overline(11))
-                    .tracking(2)
-                    .foregroundStyle(Color.brandBlue)
-                Spacer()
-            }
+        let decisive = section.wins + section.losses
+        let winPct = decisive > 0 ? Double(section.wins) / Double(decisive) * 100 : 0
+        let record = section.pushes > 0
+            ? "\(section.wins)-\(section.losses)-\(section.pushes)"
+            : "\(section.wins)-\(section.losses)"
 
-            // Mini record strip
-            HStack(spacing: Theme.Spacing.md) {
-                // Record
-                Text(section.displayRecord)
-                    .font(Theme.Font.data(13, weight: .semibold))
+        return HStack(spacing: 0) {
+            // Record
+            VStack(spacing: 4) {
+                Text(record)
+                    .font(Theme.Font.display(22))
                     .foregroundStyle(Color.brandTextPrimary)
-
-                Spacer()
-
-                // Pick count
-                Text("\(section.picks.count) PICKS")
-                    .font(Theme.Font.overline(10))
-                    .tracking(1)
+                Text("RECORD")
+                    .font(Theme.Font.overline(9))
+                    .tracking(1.5)
                     .foregroundStyle(Color.brandTextMuted)
             }
-            .padding(.vertical, Theme.Spacing.xs)
-            .padding(.horizontal, Theme.Spacing.md)
-            .background(Color.brandSurface.opacity(0.5))
-            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.sm))
+            .frame(maxWidth: .infinity)
+
+            Rectangle()
+                .fill(Color.brandBorder)
+                .frame(width: 1, height: 28)
+
+            // Win %
+            VStack(spacing: 4) {
+                Text(decisive > 0 ? String(format: "%.0f%%", winPct) : "—")
+                    .font(Theme.Font.display(22))
+                    .foregroundStyle(winPct >= 50 ? Color.winGreen : Color.lossRed)
+                Text("WIN %")
+                    .font(Theme.Font.overline(9))
+                    .tracking(1.5)
+                    .foregroundStyle(Color.brandTextMuted)
+            }
+            .frame(maxWidth: .infinity)
+
+            Rectangle()
+                .fill(Color.brandBorder)
+                .frame(width: 1, height: 28)
+
+            // Pick count
+            VStack(spacing: 4) {
+                Text("\(section.picks.count)")
+                    .font(Theme.Font.display(22))
+                    .foregroundStyle(Color.brandTextPrimary)
+                Text("PICKS")
+                    .font(Theme.Font.overline(9))
+                    .tracking(1.5)
+                    .foregroundStyle(Color.brandTextMuted)
+            }
+            .frame(maxWidth: .infinity)
         }
+        .padding(Theme.Spacing.lg)
+        .background(Color.brandSurface)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.lg))
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.Radius.lg)
+                .stroke(Color.brandBorder, lineWidth: 1)
+        )
     }
 }

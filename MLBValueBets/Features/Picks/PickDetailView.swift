@@ -21,6 +21,11 @@ struct PickDetailView: View {
                     // Hero
                     hero
 
+                    // Outcome banner (if settled) — shown first so result is immediate
+                    if let outcome = pick.outcome {
+                        outcomeBanner(outcome: outcome)
+                    }
+
                     // Main pick panel
                     mainPanel
 
@@ -30,11 +35,6 @@ struct PickDetailView: View {
                     // Signals
                     if pick.sharpSignal || (pick.pinnacleConfirms ?? false) {
                         signals
-                    }
-
-                    // Outcome (if settled)
-                    if let outcome = pick.outcome {
-                        outcomeSection(outcome: outcome)
                     }
                 }
                 .padding(Theme.Spacing.lg)
@@ -216,28 +216,40 @@ struct PickDetailView: View {
         .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.sm))
     }
 
-    private func outcomeSection(outcome: String) -> some View {
-        HStack {
-            Circle()
-                .fill(Color.outcomeColor(for: outcome))
-                .frame(width: 10, height: 10)
-            Text("RESULT  ·  \(outcome.uppercased())")
-                .font(Theme.Font.overline(11))
-                .tracking(1.5)
-                .foregroundStyle(Color.outcomeColor(for: outcome))
-            Spacer()
-            if let clv = pick.clvPct {
-                Text(String(format: "CLV %+.2f%%", clv))
-                    .font(Theme.Font.data(12, weight: .medium))
-                    .foregroundStyle(Color.brandTextSecondary)
-            }
+    private func outcomeBanner(outcome: String) -> some View {
+        let color = Color.outcomeColor(for: outcome)
+        let icon: String = switch outcome {
+        case "win":  "checkmark.circle.fill"
+        case "loss": "xmark.circle.fill"
+        case "push": "equal.circle.fill"
+        default:     "questionmark.circle.fill"
         }
-        .padding(Theme.Spacing.md)
-        .background(Color.brandSurface)
-        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.sm))
+
+        return HStack(spacing: Theme.Spacing.md) {
+            Image(systemName: icon)
+                .font(.system(size: 28, weight: .bold))
+                .foregroundStyle(color)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(outcome.uppercased())
+                    .font(Theme.Font.display(24))
+                    .foregroundStyle(color)
+                if let clv = pick.clvPct {
+                    Text(String(format: "CLV %+.2f%%", clv))
+                        .font(Theme.Font.data(12, weight: .medium))
+                        .foregroundStyle(Color.brandTextSecondary)
+                }
+            }
+
+            Spacer()
+        }
+        .padding(Theme.Spacing.lg)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(color.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.lg))
         .overlay(
-            RoundedRectangle(cornerRadius: Theme.Radius.sm)
-                .stroke(Color.brandBorder, lineWidth: 1)
+            RoundedRectangle(cornerRadius: Theme.Radius.lg)
+                .stroke(color.opacity(0.30), lineWidth: 1)
         )
     }
 

@@ -19,7 +19,7 @@ enum MarketBrand {
         case let m where m.contains("moneyline"):
             return Color.brandBlue
         case let m where m.contains("total"):
-            return Color.brandAmber
+            return Color.brandGold
         case let m where m.contains("run"), let m where m.contains("spread"):
             return Color.brandPurple
         default:

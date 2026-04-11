@@ -251,9 +251,8 @@ struct EmptyStateView: View {
                     .foregroundStyle(Color.brandBlue)
                     .padding(.horizontal, Theme.Spacing.lg)
                     .padding(.vertical, Theme.Spacing.sm + 2)
-                    .overlay(
-                        Capsule().stroke(Color.brandBlue.opacity(0.6), lineWidth: 1)
-                    )
+                    .background(Color.brandBlue.opacity(0.12))
+                    .clipShape(Capsule())
                 }
                 .buttonStyle(.plain)
                 .padding(.top, Theme.Spacing.xs)
@@ -344,9 +343,8 @@ struct ErrorStateCard: View {
                     .foregroundStyle(Color.lossRed)
                     .padding(.horizontal, Theme.Spacing.lg)
                     .padding(.vertical, Theme.Spacing.sm)
-                    .overlay(
-                        Capsule().stroke(Color.lossRed.opacity(0.6), lineWidth: 1)
-                    )
+                    .background(Color.lossRed.opacity(0.12))
+                    .clipShape(Capsule())
                 }
                 .buttonStyle(.plain)
                 .padding(.top, Theme.Spacing.xs)

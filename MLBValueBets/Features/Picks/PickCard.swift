@@ -21,73 +21,83 @@ struct PickCard: View {
     let pick: Pick
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+        HStack(spacing: 0) {
+            // Left accent stripe — instant market identification
+            Rectangle()
+                .fill(marketColor)
+                .frame(width: 3)
 
-            // 1. Overline — "MONEYLINE · FANDUEL"
-            overline
+            VStack(alignment: .leading, spacing: Theme.Spacing.md) {
 
-            // 2. Matchup
-            Text(pick.game)
-                .font(Theme.Font.heading(15, weight: .semibold))
-                .foregroundStyle(Color.brandTextPrimary)
-                .lineLimit(2)
-                .minimumScaleFactor(0.9)
-                .fixedSize(horizontal: false, vertical: true)
+                // 1. Overline — "MONEYLINE · FANDUEL"
+                overline
 
-            // 3. Side + odds — the visual hero of the card
-            HStack(alignment: .center) {
-                // Team logo (bundled PNG) or abbreviation pill fallback
-                if let team = TeamBrand.brand(for: pick.side) {
-                    if let uiImage = UIImage(named: team.assetName) {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 24, height: 24)
-                    } else {
-                        Text(team.abbreviation)
-                            .font(Theme.Font.overline(9))
-                            .tracking(1)
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 3)
-                            .background(team.color)
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                // 2. Matchup
+                Text(pick.game)
+                    .font(Theme.Font.heading(15, weight: .semibold))
+                    .foregroundStyle(Color.brandTextPrimary)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.9)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                // 3. Side + odds — the visual hero of the card
+                HStack(alignment: .center) {
+                    // Team logo (bundled PNG) or abbreviation pill fallback
+                    if let team = TeamBrand.brand(for: pick.side) {
+                        if let uiImage = UIImage(named: team.assetName) {
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 24, height: 24)
+                        } else {
+                            Text(team.abbreviation)
+                                .font(Theme.Font.overline(9))
+                                .tracking(1)
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 3)
+                                .background(team.color)
+                                .clipShape(RoundedRectangle(cornerRadius: 4))
+                        }
                     }
+
+                    Text(pick.side)
+                        .font(Theme.Font.heading(20, weight: .bold))
+                        .foregroundStyle(Color.brandTextPrimary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                    Spacer(minLength: Theme.Spacing.sm)
+                    Text(pick.bookOdds.map(formatOdds) ?? "—")
+                        .font(Theme.Font.display(28))
+                        .foregroundStyle(Color.brandTextPrimary)
+                        .tracking(1)
                 }
 
-                Text(pick.side)
-                    .font(Theme.Font.heading(20, weight: .bold))
-                    .foregroundStyle(Color.brandTextPrimary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                Spacer(minLength: Theme.Spacing.sm)
-                Text(pick.bookOdds.map(formatOdds) ?? "—")
-                    .font(Theme.Font.display(28))
-                    .foregroundStyle(Color.brandTextPrimary)
-                    .tracking(1)
-            }
+                // Hairline separator
+                Rectangle()
+                    .fill(Color.brandBorder)
+                    .frame(height: 1)
+                    .padding(.vertical, Theme.Spacing.xxs)
 
-            // Hairline separator
-            Rectangle()
-                .fill(Color.brandBorder)
-                .frame(height: 1)
-                .padding(.vertical, Theme.Spacing.xxs)
+                // 4. Stats strip
+                statsStrip
 
-            // 4. Stats strip
-            statsStrip
-
-            // 5. Signals chips (only if at least one is on)
-            if pick.sharpSignal || (pick.pinnacleConfirms ?? false) {
+                // 5. Signals chips + confidence pill
                 signalsRow
                     .padding(.top, Theme.Spacing.xxs)
-            }
 
-            // 6. Footer — outcome (if settled) or game time
-            footer
-                .padding(.top, Theme.Spacing.xxs)
+                // 6. Footer — outcome (if settled) or game time
+                footer
+                    .padding(.top, Theme.Spacing.xxs)
+            }
+            .padding(Theme.Spacing.lg)
         }
-        .padding(Theme.Spacing.lg)
-        .background(Color.brandSurface)
+        .background(
+            ZStack {
+                Color.brandSurface
+                marketColor.opacity(0.03)
+            }
+        )
         .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.lg))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.Radius.lg)
@@ -156,7 +166,10 @@ struct PickCard: View {
 
     private var statsStrip: some View {
         HStack(spacing: 0) {
-            edgeStat
+            stat(
+                value: pick.edgePct.map { String(format: "+%.1f%%", $0) } ?? "—",
+                label: "EDGE"
+            )
             divider
             stat(
                 value: pick.evPct.map { String(format: "+%.1f%%", $0) } ?? "—",
@@ -168,25 +181,6 @@ struct PickCard: View {
                 label: "KELLY"
             )
         }
-    }
-
-    /// EDGE stat with confidence-colored background tint to make the
-    /// tier visually obvious (blue=high, amber=medium, dim=low).
-    private var edgeStat: some View {
-        let tierColor = Color.edgeColor(for: pick.confidenceTier)
-        return VStack(spacing: 4) {
-            Text(pick.edgePct.map { String(format: "+%.1f%%", $0) } ?? "—")
-                .font(Theme.Font.data(15, weight: .semibold))
-                .foregroundStyle(tierColor)
-            Text("EDGE")
-                .font(Theme.Font.overline(9))
-                .tracking(1.5)
-                .foregroundStyle(tierColor.opacity(0.6))
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 4)
-        .background(tierColor.opacity(0.10))
-        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.sm))
     }
 
     private var divider: some View {
@@ -223,7 +217,21 @@ struct PickCard: View {
                 chip(text: "PIN ✓", icon: "diamond.fill", color: .brandBlue)
             }
             Spacer()
+            confidenceChip
         }
+    }
+
+    private var confidenceChip: some View {
+        let tier = pick.confidenceTier
+        let label = tier.rawValue.uppercased()
+        let color = Color.edgeColor(for: tier)
+        let icon: String = switch tier {
+        case .high:   "arrow.up.right"
+        case .medium: "equal"
+        case .low:    "arrow.down.right"
+        case .none:   "minus"
+        }
+        return chip(text: label, icon: icon, color: color)
     }
 
     private func chip(text: String, icon: String, color: Color) -> some View {
@@ -238,9 +246,6 @@ struct PickCard: View {
         .padding(.vertical, 4)
         .foregroundStyle(color)
         .background(color.opacity(0.12))
-        .overlay(
-            Capsule().stroke(color.opacity(0.35), lineWidth: 0.5)
-        )
         .clipShape(Capsule())
     }
 

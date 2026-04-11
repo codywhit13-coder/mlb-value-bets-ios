@@ -66,6 +66,7 @@ extension Color {
     // `.brandBlue` (for CTAs/active state) or `.winGreen` (for outcomes).
 
     static let brandAccent    = Color(hex: 0x22C55E)
+    static let brandGold      = Color(hex: 0xD4AF37)   // Totals (O/U) market accent
     static let brandPurple    = Color(hex: 0xA855F7)   // Pinnacle confirms chip
 
     // MARK: - Outcomes

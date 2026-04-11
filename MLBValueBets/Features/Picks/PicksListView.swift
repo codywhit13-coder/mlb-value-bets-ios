@@ -32,9 +32,30 @@ struct PicksListView: View {
                             .padding(.top, Theme.Spacing.sm)
                     }
 
-                    filterBar
+                    if let date = vm.displayDate {
+                        HStack(spacing: Theme.Spacing.sm) {
+                            Rectangle()
+                                .fill(Color.brandBlue)
+                                .frame(width: 24, height: 1)
+                            Text(date)
+                                .font(Theme.Font.overline(11))
+                                .tracking(2)
+                                .foregroundStyle(Color.brandBlue)
+                            Spacer()
+                            if let total = vm.response?.totalBets {
+                                Text("\(vm.filteredPicks.count) OF \(total) PICKS")
+                                    .font(Theme.Font.overline(10))
+                                    .tracking(1)
+                                    .foregroundStyle(Color.brandTextMuted)
+                            }
+                        }
                         .padding(.horizontal, Theme.Spacing.lg)
                         .padding(.top, vm.lastCachedAt == nil ? Theme.Spacing.sm : 0)
+                    }
+
+                    filterBar
+                        .padding(.horizontal, Theme.Spacing.lg)
+                        .padding(.top, vm.displayDate == nil && vm.lastCachedAt == nil ? Theme.Spacing.sm : 0)
 
                     content
                         .padding(.horizontal, Theme.Spacing.lg)
@@ -158,12 +179,6 @@ struct PicksListView: View {
                                 .shadow(color: Color.brandBlue.opacity(0.40), radius: 10, x: 0, y: 0)
                         }
                     }
-                )
-                .overlay(
-                    Capsule().stroke(
-                        isActive ? Color.brandBlue : Color.brandBorder,
-                        lineWidth: 0.5
-                    )
                 )
         }
         .buttonStyle(.plain)

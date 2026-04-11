@@ -28,6 +28,17 @@ final class PicksViewModel {
         var id: String { rawValue }
     }
 
+    /// Formatted date for display — e.g. "FRIDAY, APR 11"
+    var displayDate: String? {
+        guard let dateStr = response?.date else { return nil }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        guard let date = formatter.date(from: dateStr) else { return dateStr }
+        let display = DateFormatter()
+        display.dateFormat = "EEEE, MMM d"
+        return display.string(from: date).uppercased()
+    }
+
     var filteredPicks: [Pick] {
         guard let bets = response?.valueBets else { return [] }
         switch selectedMarket {
