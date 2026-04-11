@@ -39,6 +39,7 @@ struct HistoryView: View {
                     }
                     summaryHeader
                     if !vm.allPicks.isEmpty {
+                        liveRecordStrip
                         confidenceFilterBar
                         dateNavigator
                     }
@@ -70,11 +71,10 @@ struct HistoryView: View {
                 Rectangle()
                     .fill(Color.brandBlue)
                     .frame(width: 24, height: 1)
-                Text("\(vm.selectedConfidence.rawValue.uppercased()) CONFIDENCE · LAST 7 DAYS")
+                Text("LAST 7 DAYS")
                     .font(Theme.Font.overline(11))
                     .tracking(2)
                     .foregroundStyle(Color.brandBlue)
-                    .contentTransition(.numericText())
                 Spacer()
             }
 
@@ -82,15 +82,68 @@ struct HistoryView: View {
                 .font(Theme.Font.display(36))
                 .tracking(1.5)
                 .foregroundStyle(Color.brandTextPrimary)
-
-            if !vm.allPicks.isEmpty {
-                Text("\(vm.totalRecord)  ·  \(vm.filteredPicks.count) PICKS")
-                    .font(Theme.Font.overline(11))
-                    .tracking(1.5)
-                    .foregroundStyle(Color.brandTextSecondary)
-                    .contentTransition(.numericText())
-            }
         }
+    }
+
+    // MARK: - Live record strip
+
+    private var liveRecordStrip: some View {
+        let decisive = vm.totalWins + vm.totalLosses
+        let winPct = vm.totalWinRate
+
+        return HStack(spacing: 0) {
+            // Record
+            VStack(spacing: 4) {
+                Text(vm.totalRecord)
+                    .font(Theme.Font.display(22))
+                    .foregroundStyle(Color.brandTextPrimary)
+                Text("RECORD")
+                    .font(Theme.Font.overline(9))
+                    .tracking(1.5)
+                    .foregroundStyle(Color.brandTextMuted)
+            }
+            .frame(maxWidth: .infinity)
+
+            Rectangle()
+                .fill(Color.brandBorder)
+                .frame(width: 1, height: 28)
+
+            // Win %
+            VStack(spacing: 4) {
+                Text(decisive > 0 ? String(format: "%.0f%%", winPct) : "—")
+                    .font(Theme.Font.display(22))
+                    .foregroundStyle(winPct >= 50 ? Color.winGreen : Color.lossRed)
+                Text("WIN %")
+                    .font(Theme.Font.overline(9))
+                    .tracking(1.5)
+                    .foregroundStyle(Color.brandTextMuted)
+            }
+            .frame(maxWidth: .infinity)
+
+            Rectangle()
+                .fill(Color.brandBorder)
+                .frame(width: 1, height: 28)
+
+            // Pick count
+            VStack(spacing: 4) {
+                Text("\(vm.filteredPicks.count)")
+                    .font(Theme.Font.display(22))
+                    .foregroundStyle(Color.brandTextPrimary)
+                Text("PICKS")
+                    .font(Theme.Font.overline(9))
+                    .tracking(1.5)
+                    .foregroundStyle(Color.brandTextMuted)
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .padding(Theme.Spacing.lg)
+        .background(Color.brandSurface)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.lg))
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.Radius.lg)
+                .stroke(Color.brandBorder, lineWidth: 1)
+        )
+        .contentTransition(.numericText())
         .animation(Theme.Motion.spring, value: vm.selectedConfidence)
     }
 
@@ -268,16 +321,14 @@ struct HistoryView: View {
     // MARK: - Confidence filter
 
     private var confidenceFilterBar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Theme.Spacing.sm) {
-                ForEach(HistoryViewModel.ConfidenceFilter.allCases) { filter in
-                    confidenceChip(filter)
-                }
+        HStack(spacing: Theme.Spacing.sm) {
+            ForEach(HistoryViewModel.ConfidenceFilter.allCases) { filter in
+                confidenceTab(filter)
             }
         }
     }
 
-    private func confidenceChip(_ filter: HistoryViewModel.ConfidenceFilter) -> some View {
+    private func confidenceTab(_ filter: HistoryViewModel.ConfidenceFilter) -> some View {
         let isActive = vm.selectedConfidence == filter
         let count = vm.count(for: filter)
         return Button {
@@ -286,29 +337,27 @@ struct HistoryView: View {
                 vm.selectedConfidence = filter
             }
         } label: {
-            VStack(spacing: 2) {
+            VStack(spacing: 3) {
                 HStack(spacing: 6) {
                     Text(filter.rawValue.uppercased())
-                        .font(Theme.Font.overline(11))
-                        .tracking(1.5)
+                        .font(Theme.Font.heading(13, weight: .bold))
+                        .tracking(0.4)
 
-                    if count > 0 {
-                        Text("\(count)")
-                            .font(Theme.Font.data(10, weight: .bold))
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 1)
-                            .background(
-                                isActive
-                                    ? Color.brandBlue.opacity(0.20)
-                                    : Color.white.opacity(0.07)
-                            )
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
-                            .foregroundStyle(
-                                isActive
-                                    ? Color.brandBlue
-                                    : Color.brandTextMuted
-                            )
-                    }
+                    Text("\(count)")
+                        .font(Theme.Font.data(10, weight: .bold))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(
+                            isActive
+                                ? Color.brandBlue.opacity(0.20)
+                                : Color.white.opacity(0.07)
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                        .foregroundStyle(
+                            isActive
+                                ? Color.brandBlue
+                                : Color.brandTextMuted
+                        )
                 }
 
                 Text(filter.subtitle)
@@ -317,27 +366,26 @@ struct HistoryView: View {
                     .foregroundStyle(
                         isActive
                             ? Color.brandBlue.opacity(0.70)
-                            : Color.brandTextMuted.opacity(0.6)
+                            : Color.brandTextMuted.opacity(0.5)
                     )
             }
-            .padding(.horizontal, Theme.Spacing.lg)
+            .frame(maxWidth: .infinity)
             .padding(.vertical, Theme.Spacing.sm)
-            .foregroundStyle(isActive ? Color.white : Color.brandTextSecondary)
+            .foregroundStyle(isActive ? Color.brandBlue : Color.brandTextSecondary)
             .background(
-                ZStack {
-                    Capsule()
-                        .fill(Color.brandSurface)
-                    if isActive {
-                        Capsule()
-                            .fill(Color.brandBlue)
-                            .matchedGeometryEffect(id: "confidencePill", in: filterNamespace)
-                            .shadow(color: Color.brandBlue.opacity(0.40), radius: 10, x: 0, y: 0)
-                    }
-                }
+                RoundedRectangle(cornerRadius: Theme.Radius.md)
+                    .fill(isActive ? Color.brandBlue.opacity(0.12) : Color.brandSurface)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.Radius.md)
+                    .stroke(
+                        isActive ? Color.brandBlue : Color.brandBorder,
+                        lineWidth: 1
+                    )
             )
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(filter.rawValue) confidence filter")
+        .accessibilityLabel("\(filter.rawValue) confidence filter, \(count) picks")
         .accessibilityAddTraits(isActive ? .isSelected : [])
     }
 

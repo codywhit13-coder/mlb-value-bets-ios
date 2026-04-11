@@ -177,12 +177,19 @@ final class HistoryViewModel {
         )
     }
 
+    var totalWins: Int { filteredPicks.filter { $0.isWin }.count }
+    var totalLosses: Int { filteredPicks.filter { $0.isLoss }.count }
+    var totalPushes: Int { filteredPicks.filter { $0.isPush }.count }
+
     var totalRecord: String {
-        let w = filteredPicks.filter { $0.isWin }.count
-        let l = filteredPicks.filter { $0.isLoss }.count
-        let p = filteredPicks.filter { $0.isPush }.count
-        if p > 0 { return "\(w)-\(l)-\(p)" }
-        return "\(w)-\(l)"
+        if totalPushes > 0 { return "\(totalWins)-\(totalLosses)-\(totalPushes)" }
+        return "\(totalWins)-\(totalLosses)"
+    }
+
+    var totalWinRate: Double {
+        let decisive = totalWins + totalLosses
+        guard decisive > 0 else { return 0 }
+        return Double(totalWins) / Double(decisive) * 100
     }
 
     /// Count of settled picks per confidence tier (for badge display).
