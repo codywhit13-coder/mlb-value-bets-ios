@@ -45,16 +45,29 @@ struct OnboardingView: View {
         VStack(spacing: Theme.Spacing.xl) {
             Spacer()
 
-            // Icon in tinted circle
-            Image(systemName: page.icon)
-                .font(.system(size: 36, weight: .medium))
-                .foregroundStyle(page.accentColor)
-                .frame(width: 88, height: 88)
-                .background(page.accentColor.opacity(0.10))
-                .clipShape(Circle())
-                .overlay(
-                    Circle().stroke(page.accentColor.opacity(0.30), lineWidth: 1)
-                )
+            // Icon in tinted circle (or custom logo image)
+            if let customImage = page.customImage {
+                Image(customImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 56, height: 56)
+                    .frame(width: 88, height: 88)
+                    .background(page.accentColor.opacity(0.10))
+                    .clipShape(Circle())
+                    .overlay(
+                        Circle().stroke(page.accentColor.opacity(0.30), lineWidth: 1)
+                    )
+            } else {
+                Image(systemName: page.icon)
+                    .font(.system(size: 36, weight: .medium))
+                    .foregroundStyle(page.accentColor)
+                    .frame(width: 88, height: 88)
+                    .background(page.accentColor.opacity(0.10))
+                    .clipShape(Circle())
+                    .overlay(
+                        Circle().stroke(page.accentColor.opacity(0.30), lineWidth: 1)
+                    )
+            }
 
             // Headline
             Text(page.headline)

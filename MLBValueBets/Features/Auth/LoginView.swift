@@ -23,22 +23,13 @@ struct LoginView: View {
 
                     // Hero
                     VStack(spacing: Theme.Spacing.md) {
-                        // Diamond glyph instead of system baseball — feels
-                        // more like a fintech mark and matches the web's
-                        // diamond accent on PIN ✓ chips.
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 14)
-                                .fill(Color.brandSurface)
-                                .frame(width: 64, height: 64)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 14)
-                                        .stroke(Color.brandBlue.opacity(0.40), lineWidth: 1)
-                                )
-                            Image(systemName: "chart.line.uptrend.xyaxis")
-                                .font(.system(size: 28, weight: .bold))
-                                .foregroundStyle(Color.brandBlue)
-                        }
-                        .shadow(color: Color.brandBlue.opacity(0.30), radius: 24, x: 0, y: 0)
+                        // App logo — matches the home screen icon
+                        Image("LaunchLogo")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 72, height: 72)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .shadow(color: Color.brandBlue.opacity(0.30), radius: 24, x: 0, y: 0)
 
                         Text("MLB VALUE BETS")
                             .font(Theme.Font.display(34))
