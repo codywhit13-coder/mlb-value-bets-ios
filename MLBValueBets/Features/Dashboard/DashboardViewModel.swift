@@ -10,6 +10,23 @@ import Observation
 @MainActor
 final class DashboardViewModel {
 
+    // MARK: - Filter enums
+
+    enum Category: String, CaseIterable, Identifiable {
+        case valueBets    = "Value Bets"
+        case todaysPicks  = "Today's Picks"
+        case preLineup    = "Pre-Lineup"
+        var id: String { rawValue }
+    }
+
+    enum MarketFilter: String, CaseIterable, Identifiable {
+        case all       = "All"
+        case moneyline = "Moneyline"
+        case total     = "Total"
+        case runline   = "Run Line"
+        var id: String { rawValue }
+    }
+
     // MARK: - State
     var isLoading: Bool = false
     var errorMessage: String? = nil
@@ -17,27 +34,69 @@ final class DashboardViewModel {
     var liveRecord: LivePerformance? = nil
     var lastCachedAt: Date? = nil
     var isSessionExpired: Bool = false
+    var selectedCategory: Category = .valueBets
+    var selectedMarket: MarketFilter = .all
 
     // MARK: - Derived
 
-    var topPicks: [Pick] {
-        guard let resp = todayResponse else { return [] }
-        let bets = resp.valueBets
+    private var allBets: [Pick] {
+        todayResponse?.valueBets ?? []
+    }
 
-        if resp.isPro {
-            // Pro: show top 5 picks (any market)
-            return Array(bets.prefix(5))
-        } else {
-            // Free: show unlocked picks + up to 3 locked teasers
-            // Backend already marks locked=true on gated picks
-            let unlocked = bets.filter { !$0.locked }
-            let locked = Array(bets.filter { $0.locked }.prefix(3))
-            return unlocked + locked
+    /// Whether the current user is Pro
+    var isPro: Bool {
+        todayResponse?.isPro ?? false
+    }
+
+    /// Category counts (before market filter, so tabs always show totals)
+    var valueBetCount: Int {
+        allBets.filter { ($0.lineupConfirmed ?? true) && ($0.edgePct ?? 0) >= 10 }.count
+    }
+
+    var todaysPicksCount: Int {
+        allBets.filter {
+            ($0.lineupConfirmed ?? true) && ($0.edgePct ?? 0) >= 5 && ($0.edgePct ?? 0) < 10
+        }.count
+    }
+
+    var preLineupCount: Int {
+        allBets.filter { !($0.lineupConfirmed ?? true) }.count
+    }
+
+    /// Picks filtered by category + market
+    var filteredPicks: [Pick] {
+        let bets = allBets
+        let edge = { (p: Pick) -> Double in p.edgePct ?? 0 }
+
+        // Category filter
+        let byCategory: [Pick]
+        switch selectedCategory {
+        case .valueBets:
+            byCategory = bets.filter { ($0.lineupConfirmed ?? true) && edge($0) >= 10 }
+        case .todaysPicks:
+            byCategory = bets.filter { ($0.lineupConfirmed ?? true) && edge($0) >= 5 && edge($0) < 10 }
+        case .preLineup:
+            byCategory = bets.filter { !($0.lineupConfirmed ?? true) }
+        }
+
+        // Market filter
+        switch selectedMarket {
+        case .all:       return byCategory
+        case .moneyline: return byCategory.filter { $0.market.lowercased().contains("moneyline") }
+        case .total:     return byCategory.filter { $0.market.lowercased().contains("total") }
+        case .runline:   return byCategory.filter {
+            let m = $0.market.lowercased()
+            return m.contains("run") || m.contains("spread")
+        }
         }
     }
 
-    var valueBetCount: Int {
-        todayResponse?.valueBets.filter { $0.valueBet && !$0.locked }.count ?? 0
+    /// Free user picks — show unlocked + up to 3 locked teasers (no category filtering)
+    var freePicks: [Pick] {
+        let bets = allBets
+        let unlocked = bets.filter { !$0.locked }
+        let locked = Array(bets.filter { $0.locked }.prefix(3))
+        return unlocked + locked
     }
 
     /// Formatted date for display — e.g. "WEDNESDAY, APR 9"

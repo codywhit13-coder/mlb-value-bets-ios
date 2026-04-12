@@ -45,6 +45,7 @@ struct Pick: Codable, Identifiable, Hashable {
     let clvPct: Double?
     let evPct: Double?
     let modelTotal: Double?    // Totals only: predicted run total
+    let lineupConfirmed: Bool? // true = both lineups posted (nil defaults to true)
 
     // MARK: - Convenience
     var isSettled: Bool { outcome != nil }

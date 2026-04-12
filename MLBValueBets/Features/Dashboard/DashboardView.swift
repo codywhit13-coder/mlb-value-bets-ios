@@ -6,15 +6,19 @@
 //    1. BrandBackground (radial blue glow + grid + amber accent)
 //    2. Hero: huge display title + tier badge
 //    3. Live record strip (Bebas Neue numerals)
-//    4. Section overline + top picks list
-//    5. View All CTA
+//    4. Category tabs (Value Bets / Today's Picks / Pre-Lineup) — Pro only
+//    5. Market filter (All / ML / Totals / RL) — Pro only
+//    6. Picks list
+//    7. View All CTA
 //
 
 import SwiftUI
+import UIKit
 
 struct DashboardView: View {
     @State private var vm: DashboardViewModel
     @Environment(AuthViewModel.self) private var auth
+    @Namespace private var categoryNamespace
 
     @MainActor
     init(vm: DashboardViewModel? = nil) {
@@ -33,11 +37,21 @@ struct DashboardView: View {
                         }
                         hero
                         recordSection
-                        topPicksSection
-                        if vm.todayResponse != nil && !vm.topPicks.isEmpty {
+
+                        // Pro users: category tabs + market filter + filtered picks
+                        // Free users: just their unlocked picks, no filters
+                        if vm.isPro {
+                            categoryTabs
+                            marketFilter
+                            proPicksSection
+                        } else {
+                            freePicksSection
+                        }
+
+                        if vm.todayResponse != nil {
                             viewAllButton
                         }
-                        if vm.todayResponse?.tier == "free" || !(auth.currentUser?.isPro ?? false) {
+                        if !vm.isPro {
                             upgradeBanner
                         }
                     }
@@ -98,18 +112,29 @@ struct DashboardView: View {
                 .tracking(1.5)
                 .foregroundStyle(Color.brandTextPrimary)
 
-            // Date subtitle
+            // Date + stats subtitle
             if let date = vm.displayDate {
                 Text(date)
                     .font(Theme.Font.overline(11))
                     .tracking(1.5)
                     .foregroundStyle(Color.brandTextSecondary)
             }
+            if let data = vm.todayResponse {
+                HStack(spacing: Theme.Spacing.sm) {
+                    Text("\(data.gamesToday) games")
+                    Text("·").foregroundStyle(Color.brandTextMuted)
+                    Text("\(data.totalBets) picks")
+                    Text("·").foregroundStyle(Color.brandTextMuted)
+                    Text("\(vm.valueBetCount) value bets")
+                }
+                .font(Theme.Font.body(12))
+                .foregroundStyle(Color.brandTextMuted)
+            }
         }
     }
 
     private var tierBadge: some View {
-        let isPro = vm.todayResponse?.isPro ?? (auth.currentUser?.isPro ?? false)
+        let isPro = vm.isPro
         return Text(isPro ? "PRO" : "FREE")
             .font(Theme.Font.overline(10))
             .tracking(1.5)
@@ -194,45 +219,224 @@ struct DashboardView: View {
         }
     }
 
-    // MARK: - Top picks section
+    // MARK: - Category tabs (Pro only)
 
-    private var topPicksSection: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.md) {
-            HStack(spacing: Theme.Spacing.sm) {
-                Rectangle()
-                    .fill(Color.brandBlue)
-                    .frame(width: 24, height: 1)
-                Text("TOP PICKS")
-                    .font(Theme.Font.overline(11))
-                    .tracking(2)
-                    .foregroundStyle(Color.brandBlue)
-                Spacer()
-                if let total = vm.todayResponse?.totalBets {
-                    Text("\(vm.valueBetCount) VALUE / \(total) TOTAL")
-                        .font(Theme.Font.overline(10))
-                        .tracking(1)
-                        .foregroundStyle(Color.brandTextMuted)
+    private var categoryTabs: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: Theme.Spacing.xs) {
+                ForEach(DashboardViewModel.Category.allCases) { cat in
+                    categoryChip(cat)
                 }
             }
-            picksList
+            .padding(.vertical, 3)
+        }
+    }
+
+    private func categoryChip(_ category: DashboardViewModel.Category) -> some View {
+        let isActive = vm.selectedCategory == category
+        let count: Int = {
+            switch category {
+            case .valueBets:   return vm.valueBetCount
+            case .todaysPicks: return vm.todaysPicksCount
+            case .preLineup:   return vm.preLineupCount
+            }
+        }()
+
+        return Button {
+            UISelectionFeedbackGenerator().selectionChanged()
+            withAnimation(Theme.Motion.spring) {
+                vm.selectedCategory = category
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Text(category.rawValue.uppercased())
+                    .font(Theme.Font.overline(11))
+                    .tracking(1.2)
+                Text("\(count)")
+                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 1)
+                    .background(isActive ? Color.white.opacity(0.20) : Color.white.opacity(0.08))
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
+            }
+            .padding(.horizontal, Theme.Spacing.lg)
+            .padding(.vertical, Theme.Spacing.sm)
+            .foregroundStyle(isActive ? Color.white : Color.brandTextSecondary)
+            .background(
+                ZStack {
+                    Capsule()
+                        .fill(Color.brandSurface)
+                    if isActive {
+                        Capsule()
+                            .fill(Color.brandBlue)
+                            .matchedGeometryEffect(id: "categoryPill", in: categoryNamespace)
+                            .shadow(color: Color.brandBlue.opacity(0.40), radius: 10)
+                    }
+                }
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Market filter (Pro only)
+
+    private var marketFilter: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: Theme.Spacing.sm) {
+                ForEach(DashboardViewModel.MarketFilter.allCases) { market in
+                    marketChip(market)
+                }
+            }
+        }
+    }
+
+    private func marketChip(_ market: DashboardViewModel.MarketFilter) -> some View {
+        let isActive = vm.selectedMarket == market
+        return Button {
+            UISelectionFeedbackGenerator().selectionChanged()
+            withAnimation(Theme.Motion.spring) {
+                vm.selectedMarket = market
+            }
+        } label: {
+            Text(market.rawValue.uppercased())
+                .font(Theme.Font.overline(10))
+                .tracking(1)
+                .padding(.horizontal, Theme.Spacing.md)
+                .padding(.vertical, 6)
+                .foregroundStyle(isActive ? Color.brandBlue : Color.brandTextMuted)
+                .background(
+                    RoundedRectangle(cornerRadius: Theme.Radius.sm)
+                        .fill(isActive ? Color.brandBlue.opacity(0.12) : Color.brandSurface)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.Radius.sm)
+                        .stroke(isActive ? Color.brandBlue.opacity(0.40) : Color.brandBorder, lineWidth: 1)
+                )
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Pro picks section
+
+    private var proPicksSection: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+            proPicksList
         }
     }
 
     @ViewBuilder
-    private var picksList: some View {
+    private var proPicksList: some View {
         if let error = vm.errorMessage {
             ErrorStateCard(message: error) {
                 Task { await vm.refresh() }
             }
         } else if vm.isLoading && vm.todayResponse == nil {
-            // First load — show 3 skeleton cards shaped like PickCard so the
-            // layout doesn't jump when the real picks arrive.
             VStack(spacing: Theme.Spacing.md) {
                 PickCardSkeleton()
                 PickCardSkeleton()
                 PickCardSkeleton()
             }
-        } else if vm.topPicks.isEmpty {
+        } else if vm.filteredPicks.isEmpty {
+            EmptyStateView(
+                headline: emptyHeadline,
+                message: emptyMessage,
+                actionTitle: emptyActionTitle,
+                action: emptyAction
+            )
+        } else {
+            VStack(spacing: Theme.Spacing.md) {
+                ForEach(Array(vm.filteredPicks.enumerated()), id: \.element.id) { index, pick in
+                    NavigationLink {
+                        PickDetailView(pick: pick)
+                    } label: {
+                        PickCard(pick: pick)
+                    }
+                    .buttonStyle(.card)
+                    .staggeredAppearance(index: index)
+                }
+            }
+            .id(vm.selectedCategory)
+        }
+    }
+
+    private var emptyHeadline: String {
+        switch vm.selectedCategory {
+        case .valueBets:   return "No value bets found yet"
+        case .todaysPicks: return "No picks in this range"
+        case .preLineup:   return "All lineups are set"
+        }
+    }
+
+    private var emptyMessage: String {
+        switch vm.selectedCategory {
+        case .valueBets:
+            if vm.preLineupCount > 0 {
+                return "Lineups haven't been posted yet — edges sharpen once confirmed lineups are in. Check the Pre-Lineup tab for early reads."
+            }
+            return "Today's slate hasn't produced any value bets yet. Pull to refresh or check back closer to first pitch."
+        case .todaysPicks:
+            return "No picks between 5-10% edge right now. Try the Value Bets tab for stronger signals."
+        case .preLineup:
+            return "All games have confirmed lineups — check Value Bets and Today's Picks for the latest edges."
+        }
+    }
+
+    private var emptyActionTitle: String {
+        switch vm.selectedCategory {
+        case .valueBets:
+            return vm.preLineupCount > 0 ? "Pre-Lineup Picks" : "Refresh"
+        case .todaysPicks:
+            return "Value Bets"
+        case .preLineup:
+            return "Value Bets"
+        }
+    }
+
+    private func emptyAction() {
+        switch vm.selectedCategory {
+        case .valueBets:
+            if vm.preLineupCount > 0 {
+                withAnimation(Theme.Motion.spring) { vm.selectedCategory = .preLineup }
+            } else {
+                Task { await vm.refresh() }
+            }
+        case .todaysPicks:
+            withAnimation(Theme.Motion.spring) { vm.selectedCategory = .valueBets }
+        case .preLineup:
+            withAnimation(Theme.Motion.spring) { vm.selectedCategory = .valueBets }
+        }
+    }
+
+    // MARK: - Free picks section
+
+    private var freePicksSection: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+            HStack(spacing: Theme.Spacing.sm) {
+                Rectangle()
+                    .fill(Color.brandBlue)
+                    .frame(width: 24, height: 1)
+                Text("YOUR PICKS")
+                    .font(Theme.Font.overline(11))
+                    .tracking(2)
+                    .foregroundStyle(Color.brandBlue)
+                Spacer()
+            }
+            freePicksList
+        }
+    }
+
+    @ViewBuilder
+    private var freePicksList: some View {
+        if let error = vm.errorMessage {
+            ErrorStateCard(message: error) {
+                Task { await vm.refresh() }
+            }
+        } else if vm.isLoading && vm.todayResponse == nil {
+            VStack(spacing: Theme.Spacing.md) {
+                PickCardSkeleton()
+                PickCardSkeleton()
+            }
+        } else if vm.freePicks.isEmpty {
             EmptyStateView(
                 headline: "No picks today",
                 message: "Today's slate hasn't produced any value bets yet. Pull to refresh or check back closer to first pitch.",
@@ -241,7 +445,7 @@ struct DashboardView: View {
             )
         } else {
             VStack(spacing: Theme.Spacing.md) {
-                ForEach(Array(vm.topPicks.enumerated()), id: \.element.id) { index, pick in
+                ForEach(Array(vm.freePicks.enumerated()), id: \.element.id) { index, pick in
                     if pick.locked {
                         LockedPickCard(pick: pick)
                             .staggeredAppearance(index: index)
