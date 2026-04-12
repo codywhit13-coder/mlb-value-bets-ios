@@ -2,8 +2,8 @@
 //  DashboardViewModelTests.swift
 //  MLBValueBetsTests
 //
-//  Unit tests for DashboardViewModel derived properties: topPicks and
-//  valueBetCount. Pure logic — no network, no simulator needed.
+//  Unit tests for DashboardViewModel derived properties: filteredPicks,
+//  category counts, and freePicks. Pure logic — no network, no simulator.
 //
 
 import XCTest
@@ -19,44 +19,44 @@ final class DashboardViewModelTests: XCTestCase {
         vm = DashboardViewModel()
     }
 
-    // MARK: - topPicks
+    // MARK: - filteredPicks (category filtering)
 
-    func test_topPicks_returnsFirst3() {
-        vm.todayResponse = .mockWideList  // 4 picks
-        XCTAssertEqual(vm.topPicks.count, 3, "topPicks should cap at 3 from a response with 4")
-    }
-
-    func test_topPicks_preservesOrder() {
-        vm.todayResponse = .mockWideList
-        let topIDs = vm.topPicks.map(\.id)
-        let allIDs = PicksResponse.mockWideList.valueBets.prefix(3).map(\.id)
-        XCTAssertEqual(topIDs, Array(allIDs), "topPicks should be the first 3 in response order")
-    }
-
-    func test_topPicks_fewerThan3_returnsAll() {
-        // mockPro has 3 picks — should return all 3
+    func test_filteredPicks_valueBets_defaultCategory() {
         vm.todayResponse = .mockPro
-        XCTAssertEqual(vm.topPicks.count, 3)
+        // Default category is .valueBets → lineup confirmed + edge >= 10%
+        // mockHighEdge: edge 12.54, confirmed → included
+        // mockMediumEdge: edge 6.25, confirmed → excluded (edge < 10)
+        // mockRunlineWin: edge 8.63, confirmed → excluded (edge < 10)
+        XCTAssertEqual(vm.filteredPicks.count, 1)
+        XCTAssertEqual(vm.filteredPicks.first?.id, Pick.mockHighEdge.id)
     }
 
-    func test_topPicks_emptyResponse_returnsEmpty() {
+    func test_filteredPicks_todaysPicks() {
+        vm.todayResponse = .mockPro
+        vm.selectedCategory = .todaysPicks
+        // lineup confirmed + edge 5-10%
+        // mockHighEdge: 12.54 → excluded (>= 10)
+        // mockMediumEdge: 6.25 → included
+        // mockRunlineWin: 8.63 → included
+        XCTAssertEqual(vm.filteredPicks.count, 2)
+    }
+
+    func test_filteredPicks_emptyResponse() {
         vm.todayResponse = .mockEmpty
-        XCTAssertTrue(vm.topPicks.isEmpty)
+        XCTAssertTrue(vm.filteredPicks.isEmpty)
     }
 
-    func test_topPicks_nilResponse_returnsEmpty() {
+    func test_filteredPicks_nilResponse() {
         XCTAssertNil(vm.todayResponse)
-        XCTAssertTrue(vm.topPicks.isEmpty)
+        XCTAssertTrue(vm.filteredPicks.isEmpty)
     }
 
     // MARK: - valueBetCount
 
-    func test_valueBetCount_countsOnlyValueBets() {
-        vm.todayResponse = .mockWideList
-        // mockHighEdge.valueBet = true, mockMediumEdge = false,
-        // mockRunlineWin = true, mockLocked = false
-        // → 2 value bets
-        XCTAssertEqual(vm.valueBetCount, 2)
+    func test_valueBetCount_countsHighEdgeConfirmed() {
+        vm.todayResponse = .mockPro
+        // Only mockHighEdge has edge >= 10% + lineupConfirmed
+        XCTAssertEqual(vm.valueBetCount, 1)
     }
 
     func test_valueBetCount_emptyResponse_returnsZero() {
@@ -67,13 +67,6 @@ final class DashboardViewModelTests: XCTestCase {
     func test_valueBetCount_nilResponse_returnsZero() {
         XCTAssertNil(vm.todayResponse)
         XCTAssertEqual(vm.valueBetCount, 0)
-    }
-
-    func test_valueBetCount_proResponse() {
-        vm.todayResponse = .mockPro
-        // mockHighEdge.valueBet = true, mockMediumEdge = false,
-        // mockRunlineWin = true → 2
-        XCTAssertEqual(vm.valueBetCount, 2)
     }
 
     // MARK: - liveRecord
@@ -96,7 +89,7 @@ final class DashboardViewModelTests: XCTestCase {
         XCTAssertNil(vm.errorMessage)
         XCTAssertNil(vm.todayResponse)
         XCTAssertNil(vm.liveRecord)
-        XCTAssertTrue(vm.topPicks.isEmpty)
+        XCTAssertTrue(vm.filteredPicks.isEmpty)
         XCTAssertEqual(vm.valueBetCount, 0)
     }
 }
