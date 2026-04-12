@@ -48,7 +48,8 @@ final class PickModelTests: XCTestCase {
             closingOdds: nil,
             clvPct: nil,
             evPct: nil,
-            modelTotal: nil
+            modelTotal: nil,
+            lineupConfirmed: true
         )
     }
 
