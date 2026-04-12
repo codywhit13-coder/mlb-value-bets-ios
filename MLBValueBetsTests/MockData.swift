@@ -36,7 +36,8 @@ extension Pick {
         closingOdds: nil,
         clvPct: nil,
         evPct: 6.18,
-        modelTotal: nil
+        modelTotal: nil,
+        lineupConfirmed: true
     )
 
     /// Medium-edge totals pick, no sharp signal. The "common" case.
@@ -64,7 +65,8 @@ extension Pick {
         closingOdds: nil,
         clvPct: nil,
         evPct: 2.95,
-        modelTotal: 9.1
+        modelTotal: 9.1,
+        lineupConfirmed: true
     )
 
     /// Settled winning runline pick. Exercises the outcome + CLV code path.
@@ -92,7 +94,8 @@ extension Pick {
         closingOdds: -128,
         clvPct: 2.73,
         evPct: 4.55,
-        modelTotal: nil
+        modelTotal: nil,
+        lineupConfirmed: true
     )
 
     /// Second moneyline pick for free-tier dashboard (2 ML picks visible).
@@ -120,7 +123,8 @@ extension Pick {
         closingOdds: nil,
         clvPct: nil,
         evPct: 3.1,
-        modelTotal: nil
+        modelTotal: nil,
+        lineupConfirmed: true
     )
 
     /// Free-tier locked pick. Detail fields are redacted/nil by the backend.
@@ -148,7 +152,8 @@ extension Pick {
         closingOdds: nil,
         clvPct: nil,
         evPct: nil,
-        modelTotal: nil
+        modelTotal: nil,
+        lineupConfirmed: true
     )
 }
 
@@ -265,7 +270,8 @@ extension Pick {
         closingOdds: 110,
         clvPct: -1.2,
         evPct: 1.8,
-        modelTotal: nil
+        modelTotal: nil,
+        lineupConfirmed: true
     )
 
     /// Settled push — for history list diversity.
@@ -293,7 +299,8 @@ extension Pick {
         closingOdds: -120,
         clvPct: 1.5,
         evPct: 2.2,
-        modelTotal: nil
+        modelTotal: nil,
+        lineupConfirmed: true
     )
 
     /// High-confidence settled win for history filter testing.
@@ -321,7 +328,8 @@ extension Pick {
         closingOdds: -130,
         clvPct: 4.5,
         evPct: 5.8,
-        modelTotal: nil
+        modelTotal: nil,
+        lineupConfirmed: true
     )
 
     /// Second win on a different day for multi-day grouping.
@@ -349,7 +357,8 @@ extension Pick {
         closingOdds: -110,
         clvPct: 2.1,
         evPct: 3.6,
-        modelTotal: nil
+        modelTotal: nil,
+        lineupConfirmed: true
     )
 }
 
