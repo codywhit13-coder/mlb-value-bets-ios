@@ -15,6 +15,7 @@ struct PicksListView: View {
     @State private var vm: PicksViewModel
     @Namespace private var filterNamespace
     @Namespace private var categoryNamespace
+    @Environment(AuthViewModel.self) private var auth
 
     @MainActor
     init(vm: PicksViewModel? = nil) {
@@ -107,7 +108,7 @@ struct PicksListView: View {
                         NavigationLink {
                             PickDetailView(pick: pick)
                         } label: {
-                            PickCard(pick: pick)
+                            PickCard(pick: pick, isPro: auth.currentUser?.isPro ?? false)
                         }
                         .buttonStyle(.card)
                         .staggeredAppearance(index: index)

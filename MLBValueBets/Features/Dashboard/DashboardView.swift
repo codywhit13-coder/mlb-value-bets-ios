@@ -340,7 +340,7 @@ struct DashboardView: View {
                     NavigationLink {
                         PickDetailView(pick: pick)
                     } label: {
-                        PickCard(pick: pick)
+                        PickCard(pick: pick, isPro: true)
                     }
                     .buttonStyle(.card)
                     .staggeredAppearance(index: index)
@@ -444,7 +444,7 @@ struct DashboardView: View {
                         NavigationLink {
                             PickDetailView(pick: pick)
                         } label: {
-                            PickCard(pick: pick)
+                            PickCard(pick: pick, isPro: false)
                         }
                         .buttonStyle(.card)
                         .staggeredAppearance(index: index)

@@ -19,6 +19,7 @@ import UIKit
 
 struct PickCard: View {
     let pick: Pick
+    var isPro: Bool = true
 
     var body: some View {
         HStack(spacing: 0) {
@@ -173,17 +174,21 @@ struct PickCard: View {
         HStack(spacing: 0) {
             stat(
                 value: pick.edgePct.map { String(format: "+%.1f%%", $0) } ?? "—",
-                label: "EDGE"
+                label: "EDGE",
+                color: Color.edgeColor(for: pick.confidenceTier),
+                blurred: !isPro
+            )
+            divider
+            stat(
+                value: String(format: "%.1f%%", pick.modelProb * 100),
+                label: "MODEL %",
+                blurred: !isPro
             )
             divider
             stat(
                 value: pick.evPct.map { String(format: "+%.1f%%", $0) } ?? "—",
-                label: "EV"
-            )
-            divider
-            stat(
-                value: String(format: "%.1f%%", pick.kellyFraction * 100),
-                label: "KELLY"
+                label: "EV %",
+                blurred: !isPro
             )
         }
     }
@@ -197,12 +202,15 @@ struct PickCard: View {
     private func stat(
         value: String,
         label: String,
-        color: Color = .brandTextPrimary
+        color: Color = .brandTextPrimary,
+        blurred: Bool = false
     ) -> some View {
         VStack(spacing: 4) {
             Text(value)
                 .font(Theme.Font.data(15, weight: .semibold))
                 .foregroundStyle(color)
+                .blur(radius: blurred ? 6 : 0)
+                .allowsHitTesting(!blurred)
             Text(label)
                 .font(Theme.Font.overline(9))
                 .tracking(1.5)
@@ -215,28 +223,85 @@ struct PickCard: View {
 
     private var signalsRow: some View {
         HStack(spacing: Theme.Spacing.sm) {
-            if pick.sharpSignal {
-                chip(text: "SHARP", icon: "bolt.fill", color: .brandAmber)
-            }
-            if pick.pinnacleConfirms == true {
-                chip(text: "PIN ✓", icon: "diamond.fill", color: .brandBlue)
+            // Confidence pill always first
+            confidenceChip
+            // Sharp + Pinnacle signals are Pro-only
+            if isPro {
+                if pick.sharpSignal {
+                    chip(text: "SHARP", icon: "bolt.fill", color: .brandAmber)
+                }
+                if pick.pinnacleConfirms == true {
+                    chip(text: "PIN ✓", icon: "diamond.fill", color: .brandBlue)
+                }
             }
             Spacer()
-            confidenceChip
         }
     }
 
+    @ViewBuilder
     private var confidenceChip: some View {
-        let tier = pick.confidenceTier
-        let label = tier.rawValue.uppercased()
-        let color = Color.edgeColor(for: tier)
-        let icon: String = switch tier {
-        case .high:   "arrow.up.right"
-        case .medium: "equal"
-        case .low:    "arrow.down.right"
-        case .none:   "minus"
+        switch pick.confidenceTier {
+        case .high:
+            // Green gradient "VALUE" badge — matches web's pulsing value badge
+            HStack(spacing: 4) {
+                Image(systemName: "chart.line.uptrend.xyaxis")
+                    .font(.system(size: 9, weight: .bold))
+                Text("VALUE")
+                    .font(Theme.Font.overline(10))
+                    .tracking(1)
+            }
+            .padding(.horizontal, Theme.Spacing.sm)
+            .padding(.vertical, 4)
+            .foregroundStyle(.white)
+            .background(
+                LinearGradient(
+                    colors: [Color(red: 0.133, green: 0.773, blue: 0.369), Color(red: 0.082, green: 0.502, blue: 0.239)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .shadow(color: Color(red: 0.133, green: 0.773, blue: 0.369).opacity(0.40), radius: 8, x: 0, y: 0)
+
+        case .medium:
+            // Amber gradient "MEDIUM" badge
+            HStack(spacing: 4) {
+                Image(systemName: "equal")
+                    .font(.system(size: 9, weight: .bold))
+                Text("MEDIUM")
+                    .font(Theme.Font.overline(10))
+                    .tracking(1)
+            }
+            .padding(.horizontal, Theme.Spacing.sm)
+            .padding(.vertical, 4)
+            .foregroundStyle(.white)
+            .background(
+                LinearGradient(
+                    colors: [Color(red: 0.961, green: 0.651, blue: 0.137), Color(red: 0.706, green: 0.471, blue: 0.078)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+
+        case .low:
+            // Translucent "LOW" badge — muted like the web
+            HStack(spacing: 4) {
+                Image(systemName: "arrow.down.right")
+                    .font(.system(size: 9, weight: .bold))
+                Text("LOW")
+                    .font(Theme.Font.overline(10))
+                    .tracking(1)
+            }
+            .padding(.horizontal, Theme.Spacing.sm)
+            .padding(.vertical, 4)
+            .foregroundStyle(Color.white.opacity(0.55))
+            .background(Color.white.opacity(0.10))
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+
+        case .none:
+            EmptyView()
         }
-        return chip(text: label, icon: icon, color: color)
     }
 
     private func chip(text: String, icon: String, color: Color) -> some View {

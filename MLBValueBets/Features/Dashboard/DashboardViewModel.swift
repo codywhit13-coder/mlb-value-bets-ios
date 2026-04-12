@@ -94,9 +94,10 @@ final class DashboardViewModel {
     /// Free user picks — show unlocked + up to 3 locked teasers (no category filtering)
     var freePicks: [Pick] {
         let bets = allBets
-        let unlocked = bets.filter { !$0.locked }
+        // Free dashboard: top 2 moneyline picks + locked placeholders
+        let unlockedML = Array(bets.filter { !$0.locked && $0.market.lowercased().contains("moneyline") }.prefix(2))
         let locked = Array(bets.filter { $0.locked }.prefix(3))
-        return unlocked + locked
+        return unlockedML + locked
     }
 
     /// Formatted date for display — e.g. "WEDNESDAY, APR 9"
