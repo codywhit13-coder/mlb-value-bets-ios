@@ -214,13 +214,11 @@ struct DashboardView: View {
     // MARK: - Category tabs (Pro only)
 
     private var categoryTabs: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Theme.Spacing.xs) {
-                ForEach(DashboardViewModel.Category.allCases) { cat in
-                    categoryChip(cat)
-                }
+        HStack(spacing: Theme.Spacing.xs) {
+            ForEach(DashboardViewModel.Category.allCases) { cat in
+                categoryChip(cat)
+                    .frame(maxWidth: .infinity)
             }
-            .padding(.vertical, 3)
         }
     }
 
@@ -251,8 +249,9 @@ struct DashboardView: View {
                     .background(isActive ? Color.white.opacity(0.20) : Color.white.opacity(0.08))
                     .clipShape(RoundedRectangle(cornerRadius: 4))
             }
-            .padding(.horizontal, Theme.Spacing.lg)
+            .padding(.horizontal, Theme.Spacing.sm)
             .padding(.vertical, Theme.Spacing.sm)
+            .frame(maxWidth: .infinity)
             .foregroundStyle(isActive ? Color.white : Color.brandTextSecondary)
             .background(
                 ZStack {
