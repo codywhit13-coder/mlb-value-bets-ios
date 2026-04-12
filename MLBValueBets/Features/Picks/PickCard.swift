@@ -86,6 +86,11 @@ struct PickCard: View {
                 signalsRow
                     .padding(.top, Theme.Spacing.xxs)
 
+                // 5b. Pre-lineup notice (unsettled + lineups not posted)
+                if pick.outcome == nil && !(pick.lineupConfirmed ?? true) {
+                    preLineupBanner
+                }
+
                 // 6. Footer — outcome (if settled) or game time
                 footer
                     .padding(.top, Theme.Spacing.xxs)
@@ -247,6 +252,23 @@ struct PickCard: View {
         .foregroundStyle(color)
         .background(color.opacity(0.12))
         .clipShape(Capsule())
+    }
+
+    // MARK: - Pre-lineup banner
+
+    private var preLineupBanner: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 10, weight: .semibold))
+            Text("Edge may shift after lineups are posted")
+                .font(Theme.Font.data(11, weight: .medium))
+        }
+        .foregroundStyle(Color.brandAmber)
+        .padding(.horizontal, Theme.Spacing.md)
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.brandAmber.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.sm))
     }
 
     // MARK: - Footer
