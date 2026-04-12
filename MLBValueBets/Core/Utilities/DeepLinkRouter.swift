@@ -7,7 +7,7 @@
 //  into specific views.
 //
 //  Supported routes:
-//    valuebets://picks       → All Picks tab
+//    valuebets://picks       → Dashboard tab (legacy, redirects)
 //    valuebets://history     → History tab
 //    valuebets://settings    → Settings tab
 //    valuebets://dashboard   → Dashboard tab (default)
@@ -27,7 +27,6 @@ final class DeepLinkRouter {
 
     enum Tab: String, CaseIterable {
         case dashboard
-        case picks
         case history
         case settings
     }
@@ -41,7 +40,7 @@ final class DeepLinkRouter {
         let host = url.host() ?? url.path()
         switch host {
         case "picks":
-            selectedTab = .picks
+            selectedTab = .dashboard
         case "history":
             selectedTab = .history
         case "settings":

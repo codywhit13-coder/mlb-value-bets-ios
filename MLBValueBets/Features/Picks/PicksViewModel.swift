@@ -10,15 +10,14 @@ import Observation
 @MainActor
 final class PicksViewModel {
 
-    // MARK: - State
-    var isLoading: Bool = false
-    var errorMessage: String? = nil
-    var response: PicksResponse? = nil
-    var selectedMarket: MarketFilter = .all
-    var lastCachedAt: Date? = nil
-    var isSessionExpired: Bool = false
+    // MARK: - Filter enums
 
-    // MARK: - Filter
+    enum Category: String, CaseIterable, Identifiable {
+        case valueBets    = "Value Bets"
+        case todaysPicks  = "Today's Picks"
+        case preLineup    = "Pre-Lineup"
+        var id: String { rawValue }
+    }
 
     enum MarketFilter: String, CaseIterable, Identifiable {
         case all       = "All"
@@ -27,6 +26,15 @@ final class PicksViewModel {
         case runline   = "Run Line"
         var id: String { rawValue }
     }
+
+    // MARK: - State
+    var isLoading: Bool = false
+    var errorMessage: String? = nil
+    var response: PicksResponse? = nil
+    var selectedCategory: Category = .valueBets
+    var selectedMarket: MarketFilter = .all
+    var lastCachedAt: Date? = nil
+    var isSessionExpired: Bool = false
 
     /// Formatted date for display — e.g. "FRIDAY, APR 11"
     var displayDate: String? {
@@ -39,13 +47,46 @@ final class PicksViewModel {
         return display.string(from: date).uppercased()
     }
 
+    private var allBets: [Pick] {
+        response?.valueBets ?? []
+    }
+
+    /// Category counts (before market filter)
+    var valueBetCount: Int {
+        allBets.filter { ($0.lineupConfirmed ?? true) && ($0.edgePct ?? 0) >= 10 }.count
+    }
+
+    var todaysPicksCount: Int {
+        allBets.filter {
+            ($0.lineupConfirmed ?? true) && ($0.edgePct ?? 0) >= 5 && ($0.edgePct ?? 0) < 10
+        }.count
+    }
+
+    var preLineupCount: Int {
+        allBets.filter { !($0.lineupConfirmed ?? true) }.count
+    }
+
     var filteredPicks: [Pick] {
-        guard let bets = response?.valueBets else { return [] }
+        let bets = allBets
+        let edge = { (p: Pick) -> Double in p.edgePct ?? 0 }
+
+        // Category filter
+        let byCategory: [Pick]
+        switch selectedCategory {
+        case .valueBets:
+            byCategory = bets.filter { ($0.lineupConfirmed ?? true) && edge($0) >= 10 }
+        case .todaysPicks:
+            byCategory = bets.filter { ($0.lineupConfirmed ?? true) && edge($0) >= 5 && edge($0) < 10 }
+        case .preLineup:
+            byCategory = bets.filter { !($0.lineupConfirmed ?? true) }
+        }
+
+        // Market filter
         switch selectedMarket {
-        case .all:       return bets
-        case .moneyline: return bets.filter { $0.market.lowercased().contains("moneyline") }
-        case .total:     return bets.filter { $0.market.lowercased().contains("total") }
-        case .runline:   return bets.filter {
+        case .all:       return byCategory
+        case .moneyline: return byCategory.filter { $0.market.lowercased().contains("moneyline") }
+        case .total:     return byCategory.filter { $0.market.lowercased().contains("total") }
+        case .runline:   return byCategory.filter {
             let m = $0.market.lowercased()
             return m.contains("run") || m.contains("spread")
         }

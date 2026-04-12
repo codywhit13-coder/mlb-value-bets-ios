@@ -14,6 +14,7 @@ import UIKit
 struct PicksListView: View {
     @State private var vm: PicksViewModel
     @Namespace private var filterNamespace
+    @Namespace private var categoryNamespace
 
     @MainActor
     init(vm: PicksViewModel? = nil) {
@@ -53,9 +54,12 @@ struct PicksListView: View {
                         .padding(.top, vm.lastCachedAt == nil ? Theme.Spacing.sm : 0)
                     }
 
-                    filterBar
+                    categoryTabs
                         .padding(.horizontal, Theme.Spacing.lg)
                         .padding(.top, vm.displayDate == nil && vm.lastCachedAt == nil ? Theme.Spacing.sm : 0)
+
+                    filterBar
+                        .padding(.horizontal, Theme.Spacing.lg)
 
                     content
                         .padding(.horizontal, Theme.Spacing.lg)
@@ -89,7 +93,7 @@ struct PicksListView: View {
             EmptyStateView(
                 headline: emptyHeadline,
                 message: emptyMessage,
-                actionTitle: vm.selectedMarket == .all ? "Refresh" : "Show all",
+                actionTitle: emptyActionTitle,
                 action: emptyAction
             )
             .padding(.top, Theme.Spacing.lg)
@@ -115,31 +119,115 @@ struct PicksListView: View {
     }
 
     private var emptyHeadline: String {
-        vm.selectedMarket == .all ? "No picks today" : "No picks match"
+        switch vm.selectedCategory {
+        case .valueBets:   return "No value bets found yet"
+        case .todaysPicks: return "No picks in this range"
+        case .preLineup:   return "All lineups are set"
+        }
     }
 
     private var emptyMessage: String {
-        switch vm.selectedMarket {
-        case .all:
+        switch vm.selectedCategory {
+        case .valueBets:
+            if vm.preLineupCount > 0 {
+                return "Lineups haven't been posted yet — edges sharpen once confirmed lineups are in. Check the Pre-Lineup tab for early reads."
+            }
             return "Today's slate hasn't produced any value bets yet. Pull to refresh or check back closer to first pitch."
-        case .moneyline:
-            return "No moneyline value bets right now. Try another market or show all picks."
-        case .total:
-            return "No totals value bets right now. Try another market or show all picks."
-        case .runline:
-            return "No run line value bets right now. Try another market or show all picks."
+        case .todaysPicks:
+            return "No picks between 5-10% edge right now. Try the Value Bets tab for stronger signals."
+        case .preLineup:
+            return "All games have confirmed lineups — check Value Bets and Today's Picks for the latest edges."
+        }
+    }
+
+    private var emptyActionTitle: String {
+        if vm.selectedMarket != .all { return "Show all" }
+        switch vm.selectedCategory {
+        case .valueBets:   return vm.preLineupCount > 0 ? "Pre-Lineup Picks" : "Refresh"
+        case .todaysPicks: return "Value Bets"
+        case .preLineup:   return "Value Bets"
         }
     }
 
     private func emptyAction() {
-        if vm.selectedMarket == .all {
-            Task { await vm.refresh() }
-        } else {
-            withAnimation(Theme.Motion.spring) {
-                vm.selectedMarket = .all
+        if vm.selectedMarket != .all {
+            withAnimation(Theme.Motion.spring) { vm.selectedMarket = .all }
+            return
+        }
+        switch vm.selectedCategory {
+        case .valueBets:
+            if vm.preLineupCount > 0 {
+                withAnimation(Theme.Motion.spring) { vm.selectedCategory = .preLineup }
+            } else {
+                Task { await vm.refresh() }
             }
+        case .todaysPicks:
+            withAnimation(Theme.Motion.spring) { vm.selectedCategory = .valueBets }
+        case .preLineup:
+            withAnimation(Theme.Motion.spring) { vm.selectedCategory = .valueBets }
         }
     }
+
+    // MARK: - Category tabs
+
+    private var categoryTabs: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: Theme.Spacing.xs) {
+                ForEach(PicksViewModel.Category.allCases) { cat in
+                    categoryChip(cat)
+                }
+            }
+            .padding(.vertical, 3)
+        }
+    }
+
+    private func categoryChip(_ category: PicksViewModel.Category) -> some View {
+        let isActive = vm.selectedCategory == category
+        let count: Int = {
+            switch category {
+            case .valueBets:   return vm.valueBetCount
+            case .todaysPicks: return vm.todaysPicksCount
+            case .preLineup:   return vm.preLineupCount
+            }
+        }()
+
+        return Button {
+            UISelectionFeedbackGenerator().selectionChanged()
+            withAnimation(Theme.Motion.spring) {
+                vm.selectedCategory = category
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Text(category.rawValue.uppercased())
+                    .font(Theme.Font.overline(11))
+                    .tracking(1.2)
+                Text("\(count)")
+                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 1)
+                    .background(isActive ? Color.white.opacity(0.20) : Color.white.opacity(0.08))
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
+            }
+            .padding(.horizontal, Theme.Spacing.lg)
+            .padding(.vertical, Theme.Spacing.sm)
+            .foregroundStyle(isActive ? Color.white : Color.brandTextSecondary)
+            .background(
+                ZStack {
+                    Capsule()
+                        .fill(Color.brandSurface)
+                    if isActive {
+                        Capsule()
+                            .fill(Color.brandBlue)
+                            .matchedGeometryEffect(id: "categoryPill", in: categoryNamespace)
+                            .shadow(color: Color.brandBlue.opacity(0.40), radius: 10)
+                    }
+                }
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Market filter
 
     private var filterBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {

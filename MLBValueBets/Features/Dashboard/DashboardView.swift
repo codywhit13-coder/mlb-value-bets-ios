@@ -9,7 +9,6 @@
 //    4. Category tabs (Value Bets / Today's Picks / Pre-Lineup) — Pro only
 //    5. Market filter (All / ML / Totals / RL) — Pro only
 //    6. Picks list
-//    7. View All CTA
 //
 
 import SwiftUI
@@ -19,6 +18,7 @@ struct DashboardView: View {
     @State private var vm: DashboardViewModel
     @Environment(AuthViewModel.self) private var auth
     @Namespace private var categoryNamespace
+    @Namespace private var marketNamespace
 
     @MainActor
     init(vm: DashboardViewModel? = nil) {
@@ -48,9 +48,6 @@ struct DashboardView: View {
                             freePicksSection
                         }
 
-                        if vm.todayResponse != nil {
-                            viewAllButton
-                        }
                         if !vm.isPro {
                             upgradeBanner
                         }
@@ -98,10 +95,11 @@ struct DashboardView: View {
                 Rectangle()
                     .fill(Color.brandBlue)
                     .frame(width: 24, height: 1)
-                Text("TODAY")
+                Text(Date.now.formatted(.dateTime.month(.wide).day(.defaultDigits)))
                     .font(Theme.Font.overline(11))
                     .tracking(2)
                     .foregroundStyle(Color.brandBlue)
+                    .textCase(.uppercase)
                 Spacer()
                 tierBadge
             }
@@ -112,13 +110,7 @@ struct DashboardView: View {
                 .tracking(1.5)
                 .foregroundStyle(Color.brandTextPrimary)
 
-            // Date + stats subtitle
-            if let date = vm.displayDate {
-                Text(date)
-                    .font(Theme.Font.overline(11))
-                    .tracking(1.5)
-                    .foregroundStyle(Color.brandTextSecondary)
-            }
+            // Stats subtitle
             if let data = vm.todayResponse {
                 HStack(spacing: Theme.Spacing.sm) {
                     Text("\(data.gamesToday) games")
@@ -495,27 +487,4 @@ struct DashboardView: View {
         }
     }
 
-    private var viewAllButton: some View {
-        NavigationLink {
-            PicksListView()
-        } label: {
-            HStack {
-                Text("VIEW ALL PICKS")
-                    .font(Theme.Font.heading(13, weight: .bold))
-                    .tracking(1.5)
-                Spacer()
-                Image(systemName: "arrow.right")
-                    .font(.system(size: 14, weight: .bold))
-            }
-            .foregroundStyle(Color.brandBlue)
-            .padding(Theme.Spacing.lg)
-            .background(Color.brandSurface)
-            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.md))
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.Radius.md)
-                    .stroke(Color.brandBlue.opacity(0.40), lineWidth: 1)
-            )
-            .shadow(color: Color.brandBlue.opacity(0.15), radius: 12, x: 0, y: 0)
-        }
-    }
 }

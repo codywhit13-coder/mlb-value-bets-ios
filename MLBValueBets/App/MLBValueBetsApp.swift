@@ -97,13 +97,6 @@ private struct MainTabView: View {
                     Label("Dashboard", systemImage: "chart.bar.fill")
                 }
             NavigationStack {
-                PicksListView()
-            }
-            .tag(DeepLinkRouter.Tab.picks)
-            .tabItem {
-                Label("All Picks", systemImage: "list.bullet.rectangle")
-            }
-            NavigationStack {
                 HistoryView()
             }
             .tag(DeepLinkRouter.Tab.history)
