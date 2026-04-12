@@ -74,3 +74,4 @@ ui-stdout.txt
 ui-stderr.txt
 typecheck-stdout.txt
 typecheck-stderr.txt
+new-snapshots/
