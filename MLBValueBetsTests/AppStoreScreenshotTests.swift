@@ -24,7 +24,7 @@ final class AppStoreScreenshotTests: XCTestCase {
 
         // Flip to true to capture screenshots in CI.
         // Download from the "snapshot-pngs" artifact.
-        isRecording = false
+        isRecording = true
     }
 
     // iPhone 15 Pro Max — 6.7" display (1290×2796 @ 3x = 430×932 pt)
