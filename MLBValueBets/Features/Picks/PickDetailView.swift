@@ -57,13 +57,18 @@ struct PickDetailView: View {
                     .font(Theme.Font.overline(11))
                     .tracking(2)
                     .foregroundStyle(Color.brandBlue)
-                Spacer()
                 if let book = pick.book {
+                    Text("·")
+                        .font(Theme.Font.overline(10))
+                        .foregroundStyle(Color.brandTextMuted)
                     Text(book.uppercased())
                         .font(Theme.Font.overline(10))
                         .tracking(1.5)
                         .foregroundStyle(Color.brandTextMuted)
                 }
+                Spacer()
+                // Confidence badge — top right, matches PickCard
+                confidenceChip
             }
             Text(pick.game)
                 .font(Theme.Font.heading(22, weight: .bold))
@@ -73,6 +78,69 @@ struct PickDetailView: View {
                     .font(Theme.Font.body(13))
                     .foregroundStyle(Color.brandTextSecondary)
             }
+        }
+    }
+
+    @ViewBuilder
+    private var confidenceChip: some View {
+        switch pick.confidenceTier {
+        case .high:
+            HStack(spacing: 4) {
+                Image(systemName: "chart.line.uptrend.xyaxis")
+                    .font(.system(size: 9, weight: .bold))
+                Text("VALUE")
+                    .font(Theme.Font.overline(10))
+                    .tracking(1)
+            }
+            .padding(.horizontal, Theme.Spacing.sm)
+            .padding(.vertical, 4)
+            .foregroundStyle(.white)
+            .background(
+                LinearGradient(
+                    colors: [Color(red: 0.133, green: 0.773, blue: 0.369), Color(red: 0.082, green: 0.502, blue: 0.239)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .shadow(color: Color(red: 0.133, green: 0.773, blue: 0.369).opacity(0.40), radius: 8, x: 0, y: 0)
+
+        case .medium:
+            HStack(spacing: 4) {
+                Image(systemName: "equal")
+                    .font(.system(size: 9, weight: .bold))
+                Text("MEDIUM")
+                    .font(Theme.Font.overline(10))
+                    .tracking(1)
+            }
+            .padding(.horizontal, Theme.Spacing.sm)
+            .padding(.vertical, 4)
+            .foregroundStyle(.white)
+            .background(
+                LinearGradient(
+                    colors: [Color(red: 0.961, green: 0.651, blue: 0.137), Color(red: 0.706, green: 0.471, blue: 0.078)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+
+        case .low:
+            HStack(spacing: 4) {
+                Image(systemName: "arrow.down.right")
+                    .font(.system(size: 9, weight: .bold))
+                Text("LOW")
+                    .font(Theme.Font.overline(10))
+                    .tracking(1)
+            }
+            .padding(.horizontal, Theme.Spacing.sm)
+            .padding(.vertical, 4)
+            .foregroundStyle(Color.white.opacity(0.55))
+            .background(Color.white.opacity(0.10))
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+
+        case .none:
+            EmptyView()
         }
     }
 
@@ -138,7 +206,7 @@ struct PickDetailView: View {
                         statTile(label: "KELLY %",
                                  value: String(format: "%.2f%%", pick.kellyFraction * 100))
                         statTile(label: "CONFIDENCE",
-                                 value: (pick.confidence ?? pick.confidenceTier.rawValue).uppercased(),
+                                 value: confidenceLabel,
                                  color: .edgeColor(for: pick.confidenceTier))
                     }
                 }
@@ -264,6 +332,15 @@ struct PickDetailView: View {
                 .font(Theme.Font.overline(11))
                 .tracking(2)
                 .foregroundStyle(Color.brandBlue)
+        }
+    }
+
+    private var confidenceLabel: String {
+        switch pick.confidenceTier {
+        case .high:   return "VALUE"
+        case .medium: return "MEDIUM"
+        case .low:    return "LOW"
+        case .none:   return "—"
         }
     }
 
