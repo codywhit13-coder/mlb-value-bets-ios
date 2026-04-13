@@ -6,12 +6,13 @@
 //  frontend/src/components/picks/PickCard.tsx
 //
 //  Layout (top → bottom):
-//    1. Section overline:  "MONEYLINE  ·  FANDUEL"        (mono, tracked, blue)
+//    1. Section overline:  "MONEYLINE  ·  FANDUEL"  [VALUE badge top-right]
 //    2. Matchup line:      "New York Yankees @ Boston Red Sox"
 //    3. Side + odds row:   "Yankees ML"           "+108"   (Bebas Neue display)
-//    4. Stats strip:       EDGE / EV / KELLY (mono numerals)
-//    5. Signals chip row:  Sharp / Pinnacle confirms (only when present)
-//    6. Footer:            game time or settled outcome
+//    4. Stats strip:       EDGE / MODEL % / EV %  (mono numerals)
+//    5. Signals chip row:  SHARP / PIN ✓ (Pro-only, hidden if neither present)
+//    6. Pre-lineup banner  (unsettled picks with unconfirmed lineups)
+//    7. Footer:            game time or settled outcome
 //
 
 import SwiftUI
@@ -165,6 +166,9 @@ struct PickCard: View {
             }
 
             Spacer()
+
+            // Confidence badge — top right
+            confidenceChip
         }
     }
 
@@ -221,20 +225,19 @@ struct PickCard: View {
 
     // MARK: - Signals chips
 
+    @ViewBuilder
     private var signalsRow: some View {
-        HStack(spacing: Theme.Spacing.sm) {
-            // Confidence pill always first
-            confidenceChip
-            // Sharp + Pinnacle signals are Pro-only
-            if isPro {
+        // Sharp + Pinnacle signals are Pro-only; hide row entirely if nothing to show
+        if isPro && (pick.sharpSignal || pick.pinnacleConfirms == true) {
+            HStack(spacing: Theme.Spacing.sm) {
                 if pick.sharpSignal {
                     chip(text: "SHARP", icon: "bolt.fill", color: .brandAmber)
                 }
                 if pick.pinnacleConfirms == true {
                     chip(text: "PIN ✓", icon: "diamond.fill", color: .brandBlue)
                 }
+                Spacer()
             }
-            Spacer()
         }
     }
 
