@@ -14,12 +14,9 @@ platform :ios do
     # Download (or create) the App Store distribution provisioning profile.
     # sigh explicitly requests an IOS_APP_STORE profile — no device registration needed.
     sigh(
-      api_key:              api_key,
-      app_identifier:       "com.titanstack.mlbvaluebets",
-      provisioning_name:    "MLBValueBets AppStore",
-      force:                false,
-      skip_install:         false,
-      readonly:             false
+      api_key:           api_key,
+      app_identifier:    "com.titanstack.mlbvaluebets",
+      provisioning_name: "MLBValueBets AppStore"
     )
 
     # Build + archive → export .ipa
