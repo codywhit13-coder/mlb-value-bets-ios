@@ -1,0 +1,51 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Build and upload a new build to TestFlight"
+  lane :beta do
+    # Authenticate with App Store Connect API key
+    api_key = app_store_connect_api_key(
+      key_id:       ENV["ASC_API_KEY_ID"],
+      issuer_id:    ENV["ASC_API_ISSUER_ID"],
+      key_content:  ENV["ASC_API_KEY_P8"],
+      is_key_content_base64: false
+    )
+
+    # Download (or create) the App Store distribution provisioning profile.
+    # sigh explicitly requests an IOS_APP_STORE profile — no device registration needed.
+    sigh(
+      api_key:              api_key,
+      app_identifier:       "com.titanstack.mlbvaluebets",
+      provisioning_name:    "MLBValueBets AppStore",
+      force:                false,
+      skip_install:         false,
+      readonly:             false
+    )
+
+    # Build + archive → export .ipa
+    gym(
+      project:          "MLBValueBets.xcodeproj",
+      scheme:           "MLBValueBets",
+      configuration:    "Release",
+      export_method:    "app-store",
+      export_options: {
+        teamID:                       ENV["APPLE_TEAM_ID"],
+        uploadSymbols:                true,
+        stripSwiftSymbols:            true,
+        manageAppVersionAndBuildNumber: false
+      },
+      xcargs:           "CURRENT_PROJECT_VERSION=#{ENV['BUILD_NUMBER']} DEVELOPMENT_TEAM=#{ENV['APPLE_TEAM_ID']}",
+      build_path:       "build",
+      output_directory: "build/export",
+      clean:            false
+    )
+
+    # Upload to TestFlight
+    pilot(
+      api_key:                        api_key,
+      skip_waiting_for_build_processing: true,
+      changelog:                      ENV.fetch("RELEASE_NOTES", "Internal CI build"),
+      distribute_external:            false
+    )
+  end
+end

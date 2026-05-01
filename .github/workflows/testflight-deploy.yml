@@ -11,10 +11,6 @@ name: TestFlight Deploy
 #   APPLE_TEAM_ID          Apple Developer team ID (10 chars, e.g. AB12CD34EF)
 #   DIST_CERT_P12          Base64-encoded Apple Distribution .p12 certificate
 #   DIST_CERT_PASSWORD     Password used when exporting the .p12
-#
-# This workflow does NOT run automatically until those secrets exist + the
-# Apple Developer Program is active. See README.md "TestFlight Deployment Setup"
-# for the one-time setup steps.
 
 on:
   workflow_dispatch:
@@ -37,14 +33,6 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 60
 
-    env:
-      PROJECT: MLBValueBets.xcodeproj
-      SCHEME: MLBValueBets
-      CONFIGURATION: Release
-      ARCHIVE_PATH: build/MLBValueBets.xcarchive
-      EXPORT_PATH: build/export
-      EXPORT_OPTIONS_PLIST: build/ExportOptions.plist
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -65,112 +53,31 @@ jobs:
       - name: Generate Xcode project
         run: xcodegen generate
 
-      - name: Set build number to GitHub run number
-        run: |
-          mkdir -p build
-          echo "Build number = ${{ github.run_number }}"
-          # Marketing version stays whatever project.yml says (1.0.0).
-          # Build number gets bumped on every CI run for uniqueness.
-
-      - name: Install App Store Connect API key
-        env:
-          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
-          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
-        run: |
-          if [ -z "$ASC_API_KEY_P8" ] || [ -z "$ASC_API_KEY_ID" ]; then
-            echo "::error::Missing ASC_API_KEY_P8 or ASC_API_KEY_ID secret. See README.md → TestFlight Deployment Setup."
-            exit 1
-          fi
-          # altool searches ~/private_keys/ for AuthKey_<KEY_ID>.p8
-          mkdir -p ~/private_keys
-          echo "$ASC_API_KEY_P8" > ~/private_keys/AuthKey_${ASC_API_KEY_ID}.p8
-          chmod 600 ~/private_keys/AuthKey_${ASC_API_KEY_ID}.p8
-          echo "ASC_API_KEY_PATH=$HOME/private_keys/AuthKey_${ASC_API_KEY_ID}.p8" >> $GITHUB_ENV
-
       - name: Import Distribution Certificate
         uses: apple-actions/import-codesign-certs@v3
         with:
           p12-file-base64: ${{ secrets.DIST_CERT_P12 }}
           p12-password: ${{ secrets.DIST_CERT_PASSWORD }}
 
-      - name: Archive (Release)
-        run: |
-          set -o pipefail
-          xcodebuild archive \
-            -project "$PROJECT" \
-            -scheme "$SCHEME" \
-            -configuration "$CONFIGURATION" \
-            -destination "generic/platform=iOS" \
-            -archivePath "$ARCHIVE_PATH" \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$ASC_API_KEY_PATH" \
-            -authenticationKeyID "${{ secrets.ASC_API_KEY_ID }}" \
-            -authenticationKeyIssuerID "${{ secrets.ASC_API_ISSUER_ID }}" \
-            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
-            CURRENT_PROJECT_VERSION=${{ github.run_number }} \
-            CODE_SIGN_STYLE=Automatic \
-            | xcbeautify --renderer github-actions
+      - name: Install Fastlane
+        run: bundle install
 
-      - name: Write ExportOptions.plist
-        run: |
-          cat > "$EXPORT_OPTIONS_PLIST" <<EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store-connect</string>
-            <key>destination</key>
-            <string>upload</string>
-            <key>teamID</key>
-            <string>${{ secrets.APPLE_TEAM_ID }}</string>
-            <key>signingStyle</key>
-            <string>automatic</string>
-            <key>uploadSymbols</key>
-            <true/>
-            <key>stripSwiftSymbols</key>
-            <true/>
-            <key>manageAppVersionAndBuildNumber</key>
-            <false/>
-          </dict>
-          </plist>
-          EOF
-          cat "$EXPORT_OPTIONS_PLIST"
-
-      - name: Export .ipa
-        run: |
-          set -o pipefail
-          xcodebuild -exportArchive \
-            -archivePath "$ARCHIVE_PATH" \
-            -exportPath "$EXPORT_PATH" \
-            -exportOptionsPlist "$EXPORT_OPTIONS_PLIST" \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$ASC_API_KEY_PATH" \
-            -authenticationKeyID "${{ secrets.ASC_API_KEY_ID }}" \
-            -authenticationKeyIssuerID "${{ secrets.ASC_API_ISSUER_ID }}" \
-            | xcbeautify --renderer github-actions
-          ls -lh "$EXPORT_PATH"
-
-      - name: Upload to TestFlight
-        run: |
-          IPA=$(find "$EXPORT_PATH" -name "*.ipa" | head -n 1)
-          if [ -z "$IPA" ]; then
-            echo "::error::No .ipa found in $EXPORT_PATH"
-            exit 1
-          fi
-          echo "Uploading: $IPA"
-          xcrun altool --upload-app \
-            --type ios \
-            --file "$IPA" \
-            --apiKey "${{ secrets.ASC_API_KEY_ID }}" \
-            --apiIssuer "${{ secrets.ASC_API_ISSUER_ID }}"
+      - name: Upload to TestFlight via Fastlane
+        env:
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          BUILD_NUMBER: ${{ github.run_number }}
+          RELEASE_NOTES: ${{ github.event.inputs.release_notes }}
+        run: bundle exec fastlane beta
 
       - name: Upload .ipa as artifact (debugging)
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: MLBValueBets-Release-IPA-${{ github.run_number }}
-          path: ${{ env.EXPORT_PATH }}/*.ipa
+          path: build/export/*.ipa
           retention-days: 30
           if-no-files-found: warn
 
@@ -179,6 +86,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MLBValueBets-Failed-Archive-${{ github.run_number }}
-          path: ${{ env.ARCHIVE_PATH }}
+          path: build/MLBValueBets.xcarchive
           retention-days: 7
           if-no-files-found: warn
