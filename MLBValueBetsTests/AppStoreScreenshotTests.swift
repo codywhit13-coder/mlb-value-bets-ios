@@ -81,18 +81,22 @@ final class AppStoreScreenshotTests: XCTestCase {
         )
     }
 
-    // MARK: - 3. All Picks — All Filter
+    // MARK: - 3. Dashboard Pro — Run Line filter active
 
-    func test_screenshot_03_picksListView_allFilter() {
-        let vm = PicksViewModel()
-        vm.response = .mockWideList
-        vm.selectedMarket = .all
+    func test_screenshot_03_dashboard_runlineFilter() {
+        let vm = DashboardViewModel()
+        vm.todayResponse = .mockWideList
+        vm.liveRecord = .mockRecord
         vm.isLoading = false
+        vm.selectedMarket = .runline
 
-        let view = NavigationStack {
-            PicksListView(vm: vm)
-        }
-        .preferredColorScheme(.dark)
+        let auth = AuthViewModel()
+        auth.isSignedIn = true
+        auth.currentUser = .mockPro
+
+        let view = DashboardView(vm: vm)
+            .environment(auth)
+            .preferredColorScheme(.dark)
 
         assertSnapshot(
             of: view,
