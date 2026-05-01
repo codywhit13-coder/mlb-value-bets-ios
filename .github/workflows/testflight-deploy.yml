@@ -108,9 +108,7 @@ jobs:
             -authenticationKeyIssuerID "${{ secrets.ASC_API_ISSUER_ID }}" \
             DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
             CURRENT_PROJECT_VERSION=${{ github.run_number }} \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            PROVISIONING_PROFILE_SPECIFIER="" \
+            CODE_SIGN_STYLE=Automatic \
             | xcbeautify --renderer github-actions
 
       - name: Write ExportOptions.plist
