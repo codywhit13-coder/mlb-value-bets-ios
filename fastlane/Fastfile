@@ -36,10 +36,9 @@ platform :ios do
         stripSwiftSymbols:              true,
         manageAppVersionAndBuildNumber: false
       },
-      xcargs:           "CODE_SIGN_STYLE=Manual " \
-                        "CODE_SIGN_IDENTITY=\"Apple Distribution\" " \
-                        "PROVISIONING_PROFILE_SPECIFIER=#{ENV['SIGH_UUID']} " \
-                        "CURRENT_PROJECT_VERSION=#{ENV['BUILD_NUMBER']} " \
+      # Only pass non-signing xcargs — signing is set per-target in project.yml
+      # so SPM packages (swift-crypto etc.) are not affected.
+      xcargs:           "CURRENT_PROJECT_VERSION=#{ENV['BUILD_NUMBER']} " \
                         "DEVELOPMENT_TEAM=#{ENV['APPLE_TEAM_ID']}",
       build_path:       "build",
       output_directory: "build/export",
