@@ -9,6 +9,8 @@ name: TestFlight Deploy
 #   ASC_API_ISSUER_ID      Issuer ID (UUID, e.g. 12345678-1234-1234-1234-123456789012)
 #   ASC_API_KEY_P8         Full content of the .p8 file, including BEGIN/END lines
 #   APPLE_TEAM_ID          Apple Developer team ID (10 chars, e.g. AB12CD34EF)
+#   DIST_CERT_P12          Base64-encoded Apple Distribution .p12 certificate
+#   DIST_CERT_PASSWORD     Password used when exporting the .p12
 #
 # This workflow does NOT run automatically until those secrets exist + the
 # Apple Developer Program is active. See README.md "TestFlight Deployment Setup"
@@ -84,6 +86,12 @@ jobs:
           echo "$ASC_API_KEY_P8" > ~/private_keys/AuthKey_${ASC_API_KEY_ID}.p8
           chmod 600 ~/private_keys/AuthKey_${ASC_API_KEY_ID}.p8
           echo "ASC_API_KEY_PATH=$HOME/private_keys/AuthKey_${ASC_API_KEY_ID}.p8" >> $GITHUB_ENV
+
+      - name: Import Distribution Certificate
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.DIST_CERT_P12 }}
+          p12-password: ${{ secrets.DIST_CERT_PASSWORD }}
 
       - name: Archive (Release)
         run: |
