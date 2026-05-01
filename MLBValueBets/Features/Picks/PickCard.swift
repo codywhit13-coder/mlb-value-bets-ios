@@ -190,6 +190,12 @@ struct PickCard: View {
             )
             divider
             stat(
+                value: pick.breakEven.map { String(format: "%.1f%%", $0) } ?? "—",
+                label: "BREAK EVEN",
+                blurred: false  // publicly derivable from odds — never blurred
+            )
+            divider
+            stat(
                 value: pick.evPct.map { String(format: "+%.1f%%", $0) } ?? "—",
                 label: "EV %",
                 blurred: !isPro

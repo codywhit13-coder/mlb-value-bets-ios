@@ -44,10 +44,23 @@ struct Pick: Codable, Identifiable, Hashable {
     let closingOdds: Int?
     let clvPct: Double?
     let evPct: Double?
+    let breakEvenPct: Double?  // win % needed to break even at book odds (raw, pre-devig)
     let modelTotal: Double?    // Totals only: predicted run total
     let lineupConfirmed: Bool? // true = both lineups posted (nil defaults to true)
 
     // MARK: - Convenience
+
+    /// Break-even win rate at these odds.
+    /// Uses the stored field when available; otherwise computes from bookOdds
+    /// (mirrors the web PickCard fallback formula).
+    var breakEven: Double? {
+        if let stored = breakEvenPct { return stored }
+        guard let odds = bookOdds.map(Double.init) else { return nil }
+        return odds < 0
+            ? abs(odds) / (abs(odds) + 100) * 100
+            : 100   / (odds      + 100) * 100
+    }
+
     var isSettled: Bool { outcome != nil }
     var isWin: Bool { outcome == "win" }
     var isLoss: Bool { outcome == "loss" }

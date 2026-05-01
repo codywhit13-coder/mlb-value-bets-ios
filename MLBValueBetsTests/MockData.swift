@@ -36,6 +36,7 @@ extension Pick {
         closingOdds: nil,
         clvPct: nil,
         evPct: 6.18,
+        breakEvenPct: 48.1,
         modelTotal: nil,
         lineupConfirmed: true
     )
@@ -65,6 +66,7 @@ extension Pick {
         closingOdds: nil,
         clvPct: nil,
         evPct: 2.95,
+        breakEvenPct: 48.8,
         modelTotal: 9.1,
         lineupConfirmed: true
     )
@@ -94,6 +96,7 @@ extension Pick {
         closingOdds: -128,
         clvPct: 2.73,
         evPct: 4.55,
+        breakEvenPct: 57.4,
         modelTotal: nil,
         lineupConfirmed: true
     )
@@ -123,6 +126,7 @@ extension Pick {
         closingOdds: nil,
         clvPct: nil,
         evPct: 3.1,
+        breakEvenPct: 50.2,
         modelTotal: nil,
         lineupConfirmed: true
     )
@@ -152,6 +156,7 @@ extension Pick {
         closingOdds: nil,
         clvPct: nil,
         evPct: nil,
+        breakEvenPct: nil,
         modelTotal: nil,
         lineupConfirmed: true
     )
@@ -270,6 +275,7 @@ extension Pick {
         closingOdds: 110,
         clvPct: -1.2,
         evPct: 1.8,
+        breakEvenPct: 48.8,
         modelTotal: nil,
         lineupConfirmed: true
     )
@@ -299,6 +305,7 @@ extension Pick {
         closingOdds: -120,
         clvPct: 1.5,
         evPct: 2.2,
+        breakEvenPct: 55.6,
         modelTotal: nil,
         lineupConfirmed: true
     )
@@ -328,6 +335,7 @@ extension Pick {
         closingOdds: -130,
         clvPct: 4.5,
         evPct: 5.8,
+        breakEvenPct: 53.5,
         modelTotal: nil,
         lineupConfirmed: true
     )
@@ -357,6 +365,7 @@ extension Pick {
         closingOdds: -110,
         clvPct: 2.1,
         evPct: 3.6,
+        breakEvenPct: 51.0,
         modelTotal: nil,
         lineupConfirmed: true
     )

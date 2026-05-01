@@ -184,9 +184,9 @@ struct PickDetailView: View {
     // MARK: - Stats grid
 
     private var stats: some View {
-        let edge = pick.edgePct.map { String(format: "+%.2f%%", $0) } ?? "—"
-        let ev   = pick.evPct.map { String(format: "+%.2f%%", $0) } ?? "—"
-        let implied = pick.impliedProb.map { String(format: "%.1f%%", $0 * 100) } ?? "—"
+        let edge      = pick.edgePct.map { String(format: "+%.2f%%", $0) } ?? "—"
+        let ev        = pick.evPct.map { String(format: "+%.2f%%", $0) } ?? "—"
+        let breakEven = pick.breakEven.map { String(format: "%.1f%%", $0) } ?? "—"
         let modelProb = String(format: "%.1f%%", pick.modelProb * 100)
 
         return VStack(alignment: .leading, spacing: Theme.Spacing.md) {
@@ -198,7 +198,7 @@ struct PickDetailView: View {
                     statTile(label: "EV", value: ev)
                 }
                 HStack(spacing: Theme.Spacing.sm) {
-                    statTile(label: "IMPLIED %", value: implied)
+                    statTile(label: "BREAK EVEN", value: breakEven)
                     statTile(label: "MODEL PROB", value: modelProb)
                 }
                 if pick.kellyFraction > 0 {
