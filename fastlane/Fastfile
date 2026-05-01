@@ -27,7 +27,6 @@ platform :ios do
       scheme:               "MLBValueBets",
       configuration:        "Release",
       export_method:        "app-store",
-      codesigning_identity: "Apple Distribution",
       export_options: {
         teamID:                         ENV["APPLE_TEAM_ID"],
         signingStyle:                   "manual",
