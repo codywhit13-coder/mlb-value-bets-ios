@@ -20,18 +20,27 @@ platform :ios do
     )
 
     # Build + archive → export .ipa
+    # Use Manual signing with the App Store profile sigh just downloaded.
+    # SIGH_UUID is set automatically by sigh after a successful profile download.
     gym(
-      project:          "MLBValueBets.xcodeproj",
-      scheme:           "MLBValueBets",
-      configuration:    "Release",
-      export_method:    "app-store",
+      project:              "MLBValueBets.xcodeproj",
+      scheme:               "MLBValueBets",
+      configuration:        "Release",
+      export_method:        "app-store",
+      codesigning_identity: "Apple Distribution",
       export_options: {
-        teamID:                       ENV["APPLE_TEAM_ID"],
-        uploadSymbols:                true,
-        stripSwiftSymbols:            true,
+        teamID:                         ENV["APPLE_TEAM_ID"],
+        signingStyle:                   "manual",
+        provisioningProfiles:           { "com.titanstack.mlbvaluebets" => "MLBValueBets AppStore" },
+        uploadSymbols:                  true,
+        stripSwiftSymbols:              true,
         manageAppVersionAndBuildNumber: false
       },
-      xcargs:           "CURRENT_PROJECT_VERSION=#{ENV['BUILD_NUMBER']} DEVELOPMENT_TEAM=#{ENV['APPLE_TEAM_ID']}",
+      xcargs:           "CODE_SIGN_STYLE=Manual " \
+                        "CODE_SIGN_IDENTITY=\"Apple Distribution\" " \
+                        "PROVISIONING_PROFILE_SPECIFIER=#{ENV['SIGH_UUID']} " \
+                        "CURRENT_PROJECT_VERSION=#{ENV['BUILD_NUMBER']} " \
+                        "DEVELOPMENT_TEAM=#{ENV['APPLE_TEAM_ID']}",
       build_path:       "build",
       output_directory: "build/export",
       clean:            false
