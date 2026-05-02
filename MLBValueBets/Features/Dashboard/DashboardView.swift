@@ -80,6 +80,16 @@ struct DashboardView: View {
                     AppReviewService.recordAppOpen()
                 }
             }
+            // Refresh whenever the app returns from background
+            .onReceive(NotificationCenter.default.publisher(
+                for: UIApplication.willEnterForegroundNotification)
+            ) { _ in
+                Task { await vm.refresh() }
+            }
+            // Refresh every 5 minutes while the dashboard is on screen
+            .onReceive(Timer.publish(every: 300, on: .main, in: .common).autoconnect()) { _ in
+                Task { await vm.refresh() }
+            }
             .onChange(of: vm.isSessionExpired) { _, expired in
                 if expired { Task { await auth.signOut() } }
             }

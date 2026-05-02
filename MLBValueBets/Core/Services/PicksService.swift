@@ -23,8 +23,13 @@ final class PicksService {
     }
 
     /// GET /api/picks/history?days=N — settled historical picks.
+    /// The endpoint returns [PicksResponse] (one per date); flatten to [Pick].
     /// Free tier: backend caps at 7 days. Pro tier: up to 90 days.
     func fetchHistory(days: Int = 7) async throws -> [Pick] {
-        try await APIClient.shared.get("/api/picks/history?days=\(days)", as: [Pick].self)
+        let responses = try await APIClient.shared.get(
+            "/api/picks/history?days=\(days)",
+            as: [PicksResponse].self
+        )
+        return responses.flatMap { $0.valueBets }
     }
 }
