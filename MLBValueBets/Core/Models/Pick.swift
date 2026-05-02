@@ -66,6 +66,17 @@ struct Pick: Codable, Identifiable, Hashable {
     var isLoss: Bool { outcome == "loss" }
     var isPush: Bool { outcome == "push" }
 
+    /// True when lineups are confirmed OR the scheduled game time has passed.
+    /// Prevents picks from staying in Pre-Lineup after first pitch even if
+    /// the backend job hasn't flipped lineup_confirmed yet.
+    var isEffectivelyConfirmed: Bool {
+        if lineupConfirmed == true { return true }
+        if let gt = gameTime,
+           let date = ISO8601DateFormatter().date(from: gt),
+           date < Date() { return true }
+        return lineupConfirmed ?? true  // nil defaults to confirmed
+    }
+
     /// Confidence tier derived from raw edge (matches frontend logic).
     var confidenceTier: ConfidenceTier {
         if let c = confidence?.lowercased() {

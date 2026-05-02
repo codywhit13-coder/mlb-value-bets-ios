@@ -50,17 +50,17 @@ final class DashboardViewModel {
 
     /// Category counts (before market filter, so tabs always show totals)
     var valueBetCount: Int {
-        allBets.filter { ($0.lineupConfirmed ?? true) && ($0.edgePct ?? 0) >= 10 }.count
+        allBets.filter { $0.isEffectivelyConfirmed && ($0.edgePct ?? 0) >= 10 }.count
     }
 
     var todaysPicksCount: Int {
         allBets.filter {
-            ($0.lineupConfirmed ?? true) && ($0.edgePct ?? 0) >= 5 && ($0.edgePct ?? 0) < 10
+            $0.isEffectivelyConfirmed && ($0.edgePct ?? 0) >= 5 && ($0.edgePct ?? 0) < 10
         }.count
     }
 
     var preLineupCount: Int {
-        allBets.filter { !($0.lineupConfirmed ?? true) }.count
+        allBets.filter { !$0.isEffectivelyConfirmed }.count
     }
 
     /// Picks filtered by category + market
@@ -72,11 +72,11 @@ final class DashboardViewModel {
         let byCategory: [Pick]
         switch selectedCategory {
         case .valueBets:
-            byCategory = bets.filter { ($0.lineupConfirmed ?? true) && edge($0) >= 10 }
+            byCategory = bets.filter { $0.isEffectivelyConfirmed && edge($0) >= 10 }
         case .todaysPicks:
-            byCategory = bets.filter { ($0.lineupConfirmed ?? true) && edge($0) >= 5 && edge($0) < 10 }
+            byCategory = bets.filter { $0.isEffectivelyConfirmed && edge($0) >= 5 && edge($0) < 10 }
         case .preLineup:
-            byCategory = bets.filter { !($0.lineupConfirmed ?? true) }
+            byCategory = bets.filter { !$0.isEffectivelyConfirmed }
         }
 
         // Market filter
